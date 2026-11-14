@@ -790,8 +790,28 @@ body.carrito-on .fab-cot { display: none !important; }
 .mx-linea select { flex:1.3; } .mx-linea input { flex:1; }
 .mx-linea button { border:none; background:#ffebee; color:#c62828; border-radius:8px; padding:8px 10px; font-weight:900; cursor:pointer; }
 .mx-agregar { width:100%; padding:9px; border:1.5px dashed #90caf9; background:#f5faff; color:#1565c0; border-radius:10px; font-weight:800; cursor:pointer; margin-bottom:8px; }
-.mx-resumen { background:#f7f7fb; border-radius:10px; padding:8px 10px; font-size:0.85rem; margin-bottom:8px; line-height:1.5; }
+/* v045.3: resumen mixto visual estilo seba21 */
+.mx-resumen { margin-bottom:10px; }
+.mx-bloque-total { background:#f0f0f0; border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.mx-bloque-total .mx-etiq { font-size:0.78rem; color:#666; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.mx-bloque-total .mx-val { font-size:1.25rem; font-weight:900; color:#222; }
+.mx-bloque-pagado { background:#e8f4fd; border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.mx-bloque-pagado .mx-etiq { font-size:0.78rem; color:#1565c0; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.mx-bloque-pagado .mx-val { font-size:1.25rem; font-weight:900; color:#1565c0; }
+.mx-bloque-falta { background:#ffebee; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-left:4px solid #c62828; }
+.mx-bloque-falta .mx-etiq { font-size:0.78rem; color:#c62828; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; }
+.mx-bloque-falta .mx-val { font-size:1.5rem; font-weight:900; color:#c62828; }
+.mx-bloque-vuelto { background:#e8f5e9; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-left:4px solid #1b5e20; }
+.mx-bloque-vuelto .mx-etiq { font-size:0.78rem; color:#1b5e20; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; }
+.mx-bloque-vuelto .mx-val { font-size:1.5rem; font-weight:900; color:#1b5e20; }
+.mx-bloque-exacto { background:#e8f5e9; border-radius:12px; padding:10px 14px; text-align:center; margin-bottom:6px; border:2px solid #43a047; }
+.mx-bloque-exacto span { font-size:0.9rem; font-weight:900; color:#1b5e20; }
+.mx-aviso-cot { font-size:0.78rem; color:#B26A00; padding:4px 0; line-height:1.4; }
 .mx-check { display:flex; align-items:center; gap:8px; font-size:0.88rem; font-weight:700; margin:6px 0; }
+/* v045.3: toggles visuales para fiar/deuda */
+.mx-toggle { flex:1; display:flex; align-items:center; gap:7px; font-size:0.82rem; font-weight:800; padding:9px 12px; border-radius:12px; border:2px solid #e0e0e0; background:#fafafa; cursor:pointer; transition:all 0.15s; }
+.mx-toggle input { width:16px; height:16px; cursor:pointer; accent-color:#1565c0; }
+.mx-toggle:has(input:checked) { background:#e3f2fd; border-color:#90caf9; color:#1565c0; }
 .mx-previa { margin-top:8px; padding:10px; border-radius:10px; font-size:0.85rem; line-height:1.45; white-space:pre-wrap; display:none; }
 .mx-previa.ok { display:block; background:#e8f5e9; color:#1b5e20; } .mx-previa.aviso { display:block; background:#fff3e0; color:#e65100; } .mx-previa.error { display:block; background:#ffebee; color:#b71c1c; }
 .btn-metodo {
@@ -1215,8 +1235,11 @@ body.carrito-on .fab-cot { display: none !important; }
             <div id="mxLineas"></div>
             <button type="button" class="mx-agregar" id="mxBtnAgregar" onclick="mxAgregarLinea()">＋ Agregar pago</button>
             <div class="mx-resumen" id="mxResumen"></div>
-            <label class="mx-check"><input type="checkbox" id="mxFiar" onchange="mxOpcion('fiar')"> 🧾 Fiar lo que falta</label>
-            <label class="mx-check"><input type="checkbox" id="mxDeuda" onchange="mxOpcion('deuda')"> 💳 Cobrar también deuda de un cliente</label>
+            <!-- v045.3: opciones como toggles visuales -->
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <label class="mx-toggle" id="lblFiar"><input type="checkbox" id="mxFiar" onchange="mxOpcion('fiar')"> 🧾 Fiar lo que falta</label>
+              <label class="mx-toggle" id="lblDeuda"><input type="checkbox" id="mxDeuda" onchange="mxOpcion('deuda')"> 💙 Cobrar deuda</label>
+            </div>
             <div id="mxClienteBox" style="display:none;">
                 <input type="text" class="form-input" id="mxCliente" placeholder="Nombre del cliente" style="margin-bottom:6px;" oninput="mxCambio()">
                 <input type="tel" class="form-input" id="mxTelefono" placeholder="Teléfono (opcional)" style="margin-bottom:6px;" oninput="mxCambio()">
@@ -1482,7 +1505,7 @@ if (!/^[A-Z0-9]{2,10}$/.test(PREFIJO)) {
 
 // ========== CONFIG ==========
 const API_URL  = 'https://script.google.com/macros/s/AKfycbzlfo16ivECUH-qUkjIllj636bK9uE9GuFBxaddKK3KQT06xnrv1BObwlvFQ_3WvY_f/exec';
-const APP_VERSION_TXT = '43.18';   // lo que se ve en el encabezado (para saber qué versión cargó el celular)
+const APP_VERSION_TXT = '43.19';   // lo que se ve en el encabezado (para saber qué versión cargó el celular)
 const APP_VERSION = 43; // V43.18: 🗑 vaciar flotante (celular); 🔄 Actualizar en la botonera P1 (base) con aviso; volver del Cotizador sin recargar todo · V43.17: computadora — catálogo y venta lado a lado (el catálogo usa todo el alto) y herramientas en una franja compacta · V43.8: celular «carrito al tocar» — el catálogo ocupa la pantalla; 🛒 (con cantidad) en la barra de Cobrar abre la venta para corregir; 🔍 y 🔄 flotantes; «✏️ Corregir la venta» en Confirmar · V43.7: «Venta actual · Limpiar» solo aparece con productos en el carrito; 📣 comparte el afiche nuevo (og-vao-pos-2.jpg) · V43.6: celular — mini botones P1 · P2 · P3 · ➕ (tocar abre/cierra sus herramientas; arranca cerrado), Mi plan / Salir / ✨ en el encabezado y barra de Cobrar más baja · V43.5: Mi plan igual que planes.html v5.5 (cada tarjeta con sus herramientas y «Incluye ✔ Todo P1 · ✔ Todo P2») · V43.4: con la prueba vencida o en modo consulta, ↩️ Anular queda bloqueado como Ingresar y Ajustar; «Pagar mi plan» → «Elegir mi plan» (el pago lo confirma VAO) · V43.3: «✨ P3 PRO» abre su propia ventana (precio, las 7 herramientas que suma con su explicación, Pedir por WhatsApp y Comparar planes) · V43.2: botones ocultos por el comercio (P2/P3, Mis datos → ⚙️ Ajustes) y cotización propia con fecha (aviso a los 7 días) · en el celular las tarjetas se pliegan (una abierta, las demás en una línea con sus íconos; se recuerda cuál) · pastilla dorada «✨ P3 PRO» que abre Mi plan para quien no tiene P3 · V43.1: «Mi plan» con tarjetas (P2 abraza a P1, P3 abraza a P2; P2 recomendado; tu plan marcado) · V43 (v044.1): botonera desde la MATRIZ CENTRAL de aplicaciones del servidor (un botón por aplicación y su destino); Clientes abre clientes.html (antes Fiados), Mis datos abre misdatos.html e Inventario abre inventario.html (antes los dos abrían la misma ventana); tarjeta P3 PRO (paquete completo) y tarjeta ➕ Complementos (Cobro mixto, Monedas, Juego); Mi plan con P1/P2/P3 PRO y lo que suma cada uno · V42 (v044): la tarjeta P3 muestra cada complemento contratado (cotización, compras, salidas, finanzas, mis deudas, egresos, juego, voz) y abre su pantalla; P2 suma ↩️ Anular venta; 💳 Mi plan coherente (nombres del servidor, sin «Pagar» si el pago en línea está apagado: se pide a VAO) · V41 (v043): las funciones se muestran en TARJETAS por plan — P1 · Esencial, P2 · Gestión y P3 · Complementos — cada una con título, descripción y sus botones; solo las contratadas (sin tarjetas vacías ni botones bloqueados); en celular se apilan · V40 (v043): la barra se arma por plan — P1 Esencial (Ingresar, Hoy, Fiados) y P2 Gestión (Ajustar, Reportes) en grupos; se ve solo lo contratado y habilitado; 🔀 Mixto solo con el complemento Cobro avanzado; ✔️ Revisar inventario solo con P2; 💳 Mi plan muestra tu plan, complementos y vencimiento y permite pedir cambios por WhatsApp · V39: 🔀 Mixto (solo si VAO prende el cobro avanzado): varios medios, monedas, vuelto, fiar lo que falta o cobrar deuda, con Revisar antes de cobrar y reintento sin duplicar; Hoy muestra la caja del servidor (todos los equipos); Mis datos → ✔️ Revisar inventario (solo lectura) · V38: al fiar avisa si el cliente ya debe (solo lectura, no bloquea) · V37: sin 🏠 en el encabezado (cerraba la sesión); Salir pide confirmación; '¿Perdiste o te robaron el celular?' en la pantalla del PIN · V36: PIN oculto ●●●●●● con 👁️; 📣 Compartir con el afiche (menú del celular: elegís WhatsApp Business); PIN: cierra el teclado y muestra ⏳ Verificando visible arriba; aviso único de versión nueva · V35: 📣 comparte planes.html?v=N (WhatsApp guarda la vista previa vieja de un link ya enviado) · V34: botón 💬 Soporte por WhatsApp a VAO Sistemas (encabezado y pantalla del PIN) · V33: app instalable (manifest + service worker sin copias) y recuerda el último comercio · V32: el Historial se abre SOLO (cierra Mis datos antes; en algunos celulares quedaba tapado) · V31: 🕵️ Historial de cambios (solo lectura, backend v040.4) · V30: búsqueda por TODAS las palabras
 const HOY_KEY    = 'vao_ventas_' + PREFIJO + '_' + new Date().toISOString().slice(0, 10);
 const CARRITO_KEY= 'vao_carrito_' + PREFIJO;
@@ -3395,9 +3418,21 @@ function mxCambio() {
     let pagado = 0, sinCot = false;
     _mxLineas.forEach(l => { const m = Number(l.monto) || 0; if (l.moneda && l.moneda !== 'ARS') { if (cot[l.moneda]) pagado += m * cot[l.moneda]; else sinCot = true; } else pagado += m; });
     const total = _mxTotal(), dif = Math.round((pagado - total) * 100) / 100;
-    document.getElementById('mxResumen').innerHTML = 'Total: <b>' + _mxFmt(total) + '</b> · Pagado: <b>' + _mxFmt(pagado) + '</b><br>' +
-        (dif < 0 ? 'Falta: <b style="color:#c62828">' + _mxFmt(-dif) + '</b>' : 'Vuelto (en pesos): <b style="color:#1b5e20">' + _mxFmt(dif) + '</b>') +
-        (sinCot ? '<br>⚠️ Hay una moneda sin cotización.' : '') + _mxAvisoCotV432_();
+    // v045.3: resumen visual estilo seba21 — bloques separados con color
+    let html = '';
+    html += '<div class="mx-bloque-total"><span class="mx-etiq">Total</span><span class="mx-val">' + _mxFmt(total) + '</span></div>';
+    if (pagado > 0) html += '<div class="mx-bloque-pagado"><span class="mx-etiq">Pagado</span><span class="mx-val">' + _mxFmt(pagado) + '</span></div>';
+    if (dif < 0) {
+        html += '<div class="mx-bloque-falta"><span class="mx-etiq">❌ Falta</span><span class="mx-val">' + _mxFmt(-dif) + '</span></div>';
+    } else if (dif > 0) {
+        html += '<div class="mx-bloque-vuelto"><span class="mx-etiq">✅ Vuelto</span><span class="mx-val">' + _mxFmt(dif) + '</span></div>';
+    } else if (pagado > 0) {
+        html += '<div class="mx-bloque-exacto"><span>✅ Monto exacto — sin vuelto</span></div>';
+    }
+    if (sinCot) html += '<div class="mx-aviso-cot">⚠️ Hay una moneda sin cotización.</div>';
+    const avisoCot = _mxAvisoCotV432_();
+    if (avisoCot) html += '<div class="mx-aviso-cot">' + avisoCot.replace(/<br><small>/g,'').replace(/<\/small>/g,'') + '</div>';
+    document.getElementById('mxResumen').innerHTML = html;
     if (!_leerVentaEnCurso()) {
         _mxRevisado = null;
         const p = document.getElementById('mxPrevia'); p.className = 'mx-previa'; p.textContent = '';
@@ -3422,7 +3457,31 @@ function _mxArmarOp(opId) {
     }
     return op;
 }
+// v045.3: previa visual con bloques de color (texto plano queda como fallback)
 function _mxPrevia(texto, tipo) { const p = document.getElementById('mxPrevia'); p.className = 'mx-previa ' + tipo; p.textContent = texto; }
+function _mxPreviaRev(e, ingresos, avisos) {
+    // Muestra la revisión del servidor con bloques visuales claros
+    const p = document.getElementById('mxPrevia');
+    p.className = 'mx-previa ok';
+    let h = '<div style="font-size:0.78rem;font-weight:900;color:#1b5e20;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">✔ Revisión — todavía no se cobró nada</div>';
+    // Medios de pago
+    if (ingresos && ingresos.length) {
+        ingresos.forEach(i => {
+            h += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #c8e6c9;font-size:0.88rem;">' +
+                 '<span>💰 ' + i.medio + (i.moneda && i.moneda !== 'ARS' ? ' <small style="opacity:0.7">(' + i.moneda + ')</small>' : '') + '</span>' +
+                 '<b>' + _mxFmt(i.importe) + '</b></div>';
+        });
+    }
+    // Vuelto / deuda / fiado
+    if (e.vuelto > 0) h += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.95rem;font-weight:900;color:#1b5e20;border-top:2px solid #a5d6a7;margin-top:4px;"><span>✅ Vuelto</span><span>' + _mxFmt(e.vuelto) + '</span></div>';
+    if (e.deuda > 0) h += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;color:#1565c0;"><span>💙 Abono a la deuda</span><span>' + _mxFmt(e.deuda) + '</span></div>';
+    if (e.fiado > 0) h += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.88rem;font-weight:700;color:#e65100;"><span>🧾 Queda fiado</span><span>' + _mxFmt(e.fiado) + '</span></div>';
+    if (avisos && avisos.length) {
+        p.className = 'mx-previa aviso';
+        avisos.forEach(a => { h += '<div style="font-size:0.82rem;color:#e65100;padding-top:4px;">⚠️ ' + a + '</div>'; });
+    }
+    p.innerHTML = h;
+}
 async function confirmarVentaMixto() {
     const btn = document.getElementById('btnOkConfirm');
     let enCurso = _leerVentaEnCurso();
@@ -3447,11 +3506,7 @@ async function confirmarVentaMixto() {
             if (!r) { btn.textContent = '🔎 Revisar cobro'; _mxPrevia('Sin conexión: no se pudo revisar. No se cobró nada.', 'error'); return; }
             if (!r.success) { btn.textContent = '🔎 Revisar cobro'; _mxPrevia('❌ ' + (r.error || 'No se pudo revisar.'), 'error'); return; }
             const e = r.esperado;
-            const lineas = ['Revisión (todavía no se cobró nada):', 'Compra: ' + _mxFmt(e.total)].concat(
-                r.ingresos.map(i => '· ' + i.medio + (i.moneda !== 'ARS' ? ' ' + i.moneda : '') + ': ' + _mxFmt(i.importe)),
-                e.deuda ? ['A la deuda: ' + _mxFmt(e.deuda)] : [], e.fiado ? ['Queda fiado: ' + _mxFmt(e.fiado)] : [],
-                ['Vuelto (efectivo en pesos): ' + _mxFmt(e.vuelto)], (r.avisos || []).map(a => '⚠️ ' + a));
-            _mxPrevia(lineas.join('\n'), (r.avisos && r.avisos.length) ? 'aviso' : 'ok');
+            _mxPreviaRev(e, r.ingresos, r.avisos); // v045.3: bloques visuales
             _mxRevisado = { firma: firma, esperado: e };
             btn.textContent = '✅ Confirmar cobro';
             return;
@@ -3469,7 +3524,9 @@ async function confirmarVentaMixto() {
         ventaActual = []; _mxLineas = []; _mxRevisado = null; localStorage.removeItem(CARRITO_KEY); renderVenta(); cargarProductos();
         ['mxFiar', 'mxDeuda'].forEach(id => { document.getElementById(id).checked = false; }); ['mxCliente', 'mxTelefono', 'mxDeudaMonto'].forEach(id => { document.getElementById(id).value = ''; }); // la próxima venta empieza limpia
         const av = (rs.avisos || []).map(a => '⚠️ ' + a);
-        _mxPrevia([resp.mensaje || 'Cobro registrado.'].concat(rs.deuda ? ['A la deuda: ' + _mxFmt(rs.deuda)] : [], rs.fiado ? ['Quedó fiado: ' + _mxFmt(rs.fiado)] : [], av).join('\n'), av.length ? 'aviso' : 'ok');
+        // v045.3: resultado visual con bloques
+        _mxPreviaRev({ vuelto: rs.vuelto || 0, deuda: rs.deuda || 0, fiado: rs.fiado || 0 },
+            [], av); // ingresos ya se ven arriba; solo vuelto/deuda/fiado/avisos
         if (items.length) document.getElementById('btnTicketWA').style.display = 'block';
         btn.textContent = '✅ Confirmado';
         mostrarToast(resp.yaExistia ? '✅ Ese cobro ya estaba registrado (no se cobró dos veces)' : '✅ Cobro registrado' + (rs.vuelto ? ' · Vuelto ' + _mxFmt(rs.vuelto) : ''), 'verde');
