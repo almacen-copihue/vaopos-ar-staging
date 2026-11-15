@@ -303,19 +303,26 @@ function setFiltro(f) {
 
 /* ── Entrada ── */
 document.addEventListener('DOMContentLoaded', async () => {
-  VAO.iniciar({ modulo: 'stock', titulo: 'Stock', icono: '📦', grupo: 'P2' }).then(async ok => {
-    if (!ok) return;
-
+  /* Intentar VAO.iniciar si hay sesión real; si no, igual mostrar la demo */
+  const _arrancar_ = () => {
     /* TODO: reemplazar por VAO.api('getStockCritico', {}) cuando el servidor esté listo */
-    /* const data = await VAO.api('getStockCritico', {}); */
-    /* _productos = data.productos || []; */
-
-    /* Por ahora: datos de prueba */
+    /* VAO.api('getStockCritico', {}).then(data => { _productos = data.productos || []; _renderResumen_(); _render_(); }); */
     _productos = _datosDemo_();
-
     _renderResumen_();
     _render_();
-  });
+  };
+
+  if (typeof VAO !== 'undefined' && VAO.iniciar) {
+    try {
+      const ok = await Promise.race([
+        VAO.iniciar({ modulo: 'stock', titulo: 'Stock', icono: '📦', grupo: 'P2' }),
+        new Promise(r => setTimeout(() => r('timeout'), 3000))
+      ]);
+      _arrancar_();
+    } catch(e) { _arrancar_(); }
+  } else {
+    _arrancar_();
+  }
 });
 </script>
 
