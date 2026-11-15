@@ -6,7 +6,7 @@
 <title>Stock · VAO POS</title>
 <link rel="stylesheet" href="vao-comun.css">
 <style>
-/* stock.html v1.0 — 2026-11-14 */
+/* stock.html v1.4 — 2026-11-15 */
 
 /* ── Resumen global ── */
 .stock-resumen {
@@ -194,10 +194,9 @@
 <script src="vao-comun.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
-   stock.html v1.0 — Dashboard de inventario · VAO POS
+   stock.html v1.4 — Dashboard de inventario · VAO POS
    Lee: INVENTARIO_XX (stock actual) + VENTAS_XX (últimos 7 días)
-   Acción servidor: getStockCritico (pendiente de construir)
-   Mientras tanto: datos de prueba para aprobar el diseño
+   Acción servidor: getStockCritico (v045.3)
    ═══════════════════════════════════════════════════════════ */
 
 /* ── Estado ── */
@@ -327,17 +326,38 @@ function setFiltro(f) {
 document.addEventListener('DOMContentLoaded', async () => {
   /* Intentar VAO.iniciar si hay sesión real; si no, igual mostrar la demo */
   const _arrancar_ = () => {
-    /* TODO: reemplazar por VAO.api('getStockCritico', {}) cuando el servidor esté listo */
-    /* VAO.api('getStockCritico', {}).then(data => { _productos = data.productos || []; _renderResumen_(); _render_(); }); */
-    _productos = _datosDemo_();
-    _renderResumen_();
-    _render_();
+    /* Intentar servidor real; si falla o no hay sesión → datos de demostración */
+    if (typeof VAO !== 'undefined' && VAO.api) {
+      VAO.api('getStockCritico', {})
+        .then(resp => {
+          if (resp && resp.success && Array.isArray(resp.productos) && resp.productos.length > 0) {
+            _productos = resp.productos;
+            document.getElementById('avisoDemo').style.display = 'none';   // ocultar aviso demo
+          } else {
+            // servidor responde pero sin datos (plan P1, sin inventario, etc.)
+            const motivo = (resp && resp.error) ? resp.error : 'Sin datos en el servidor.';
+            document.getElementById('avisoDemo').innerHTML = '⚠️ <span>' + motivo + ' · Mostrando datos de prueba · <strong>v1.4</strong></span>';
+            _productos = _datosDemo_();
+          }
+          _renderResumen_();
+          _render_();
+        })
+        .catch(() => {
+          _productos = _datosDemo_();
+          _renderResumen_();
+          _render_();
+        });
+    } else {
+      _productos = _datosDemo_();
+      _renderResumen_();
+      _render_();
+    }
   };
 
   if (typeof VAO !== 'undefined' && VAO.iniciar) {
     try {
       const ok = await Promise.race([
-        VAO.iniciar({ modulo: 'stock', titulo: 'Stock', icono: '📦', grupo: 'P2' }),
+        VAO.iniciar({ modulo: 'stock', titulo: 'Stock', icono: '📦', grupo: 'P2', version: '1.4' }),
         new Promise(r => setTimeout(() => r('timeout'), 3000))
       ]);
       _arrancar_();
@@ -353,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   <!-- Aviso demo -->
   <div class="stock-demo-aviso" id="avisoDemo">
-    🧪 <span>Datos de prueba — el servidor real está en construcción</span>
+    🧪 <span>Datos de prueba — sin sesión activa · <strong>v1.4</strong></span>
   </div>
 
   <!-- Resumen global -->
