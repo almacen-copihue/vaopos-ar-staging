@@ -244,9 +244,11 @@ function _clasificar_(p) {
 function _diasTexto_(p) {
   if (p.stock === 0) return { num: '0', lbl: 'sin stock' };
   if (p.ventasDia <= 0) return { num: '—', lbl: 'sin ventas' };
-  const d = Math.floor(p.stock / p.ventasDia);
+  const d = p.stock / p.ventasDia;
   if (d >= 30) return { num: '30+', lbl: 'días' };
-  return { num: String(d), lbl: d === 1 ? 'día' : 'días' };
+  if (d < 1) return { num: '<1', lbl: 'día' };
+  const di = Math.floor(d);
+  return { num: String(di), lbl: di === 1 ? 'día' : 'días' };
 }
 
 /* ── Render ── */
