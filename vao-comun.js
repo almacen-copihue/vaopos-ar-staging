@@ -1,4 +1,4 @@
-/* vao-comun.js — v045.5: indicador de conexión, «Conectando…» al abrir (nunca pantalla en blanco), buscador sin tildes que avisa mientras carga y no se queda vacío si falla. v045.3: «← POS» vuelve atrás (el POS aparece al instante, sin recargar todo) cuando se llegó desde el POS. v045.2: WhatsApp con número internacional (54 9 …) y primero WhatsApp Business (regla de oro, 13/11/2026). v044.1 (STAGING AR). v044.1: aplicaciones base (sin prestación), menú para cambiar de aplicación con la misma sesión, P3 PRO.
+/* vao-comun.js — v045.6: VAO.iniciar tolera pantallas sin contenedores estándar. v045.5: indicador de conexión, «Conectando…» al abrir (nunca pantalla en blanco), buscador sin tildes que avisa mientras carga y no se queda vacío si falla. v045.3: «← POS» vuelve atrás (el POS aparece al instante, sin recargar todo) cuando se llegó desde el POS. v045.2: WhatsApp con número internacional (54 9 …) y primero WhatsApp Business (regla de oro, 13/11/2026). v044.1 (STAGING AR). v044.1: aplicaciones base (sin prestación), menú para cambiar de aplicación con la misma sesión, P3 PRO.
    v044: Base compartida de los módulos de VAO POS.
    Un solo lugar para: dirección del servidor, sesión del comercio (el mismo PIN/token del POS), permisos por plan,
    navegación de vuelta al POS, mensajes y formato. Cada módulo es un HTML independiente que usa esta base.
@@ -76,6 +76,9 @@
       '<div class="vao-comercio" id="vaoComercio">' + VAO.esc(PREFIJO) + '</div><button class="vao-apps-btn oculto" id="vaoAppsBtn" aria-label="Otras aplicaciones" title="Otras aplicaciones">☰</button>';
     document.title = '[STAGING] ' + opts.titulo + ' · VAO POS';
     var bloqueo = document.getElementById('vaoBloqueo'), cont = document.getElementById('vaoContenido');
+    // v045.6: si una pantalla no tiene los contenedores estándar, se crean (antes: error y la pantalla seguía sin control de sesión)
+    if (!bloqueo) { bloqueo = document.createElement('div'); bloqueo.id = 'vaoBloqueo'; bloqueo.className = 'oculto'; document.body.insertBefore(bloqueo, document.body.firstChild); }
+    if (!cont) { cont = document.querySelector('main') || document.createElement('div'); }
     var mostrar = function (html) { bloqueo.innerHTML = html; bloqueo.classList.remove('oculto'); cont.classList.add('oculto'); };
     if (!PREFIJO || !VAO.token()) { mostrar('<div class="vao-tarjeta vao-centro"><div class="vao-grande">🔒</div><h2>Entrá desde el POS</h2><p>Esta herramienta usa la misma sesión del POS. Abrí el POS, poné tu PIN y volvé a tocar el botón.</p><a class="vao-btn primario" href="' + VAO.urlPos() + '">Ir al POS</a></div>'); return Promise.resolve(null); }
     mostrar(VAO.cargando('Conectando con VAO… verificando tu sesión'));   // v045.5: nunca una pantalla en blanco mientras responde el servidor
