@@ -1650,7 +1650,7 @@ if (!/^[A-Z0-9]{2,10}$/.test(PREFIJO)) {
 
 // ========== CONFIG ==========
 const API_URL  = 'https://script.google.com/macros/s/AKfycbzlfo16ivECUH-qUkjIllj636bK9uE9GuFBxaddKK3KQT06xnrv1BObwlvFQ_3WvY_f/exec';
-const APP_VERSION_TXT = '43.36';   // V43.36: el ticket del Fiado común muestra la deuda total del cliente · V43.35: el buscador de clientes funciona desde la primera letra aunque la lista todavía esté llegando · V43.34: el Fiado común busca el cliente mientras escribís (como Copihue) · V43.33: ticket de WhatsApp estilo Copihue (cómo pagó, vuelto a la deuda, estado de la deuda con números del servidor) · V43.32: PAGO MIXTO estilo Copihue · V43.31: COBRO ÚNICO (un medio o combinado en la misma pantalla, cuenta en centavos igual al servidor, resumen con monedas y equivalentes) + siempre arranca en P1 (pedido V43.30, no estaba en este respaldo) · V43.28: botón Stock en P2 (stock.html) + config.pack2_editor_stock   // lo que se ve en el encabezado (para saber qué versión cargó el celular)
+const APP_VERSION_TXT = '43.37';   // V43.37: el Fiado común no deja confirmar mientras revisa si el cliente ya debe · V43.36: el ticket del Fiado común muestra la deuda total del cliente · V43.35: el buscador de clientes funciona desde la primera letra aunque la lista todavía esté llegando · V43.34: el Fiado común busca el cliente mientras escribís (como Copihue) · V43.33: ticket de WhatsApp estilo Copihue (cómo pagó, vuelto a la deuda, estado de la deuda con números del servidor) · V43.32: PAGO MIXTO estilo Copihue · V43.31: COBRO ÚNICO (un medio o combinado en la misma pantalla, cuenta en centavos igual al servidor, resumen con monedas y equivalentes) + siempre arranca en P1 (pedido V43.30, no estaba en este respaldo) · V43.28: botón Stock en P2 (stock.html) + config.pack2_editor_stock   // lo que se ve en el encabezado (para saber qué versión cargó el celular)
 const APP_VERSION = 43; // V43.32 (v045.7): PAGO MIXTO estilo Copihue — dos recuadros (a pagar/pagado · recibido/falta-vuelto), tarjetas por medio con «¿Cuánto recibís?», Enter/AGREGAR y ✕ por ingreso; «Tarjeta / Posnet» unifica débito, crédito y QR; «Cobrar deuda del cliente» aparte del mixto y «Aplicar vuelto a deuda» dentro; una deuda no se paga con otro fiado · V43.18: 🗑 vaciar flotante (celular); 🔄 Actualizar en la botonera P1 (base) con aviso; volver del Cotizador sin recargar todo · V43.17: computadora — catálogo y venta lado a lado (el catálogo usa todo el alto) y herramientas en una franja compacta · V43.8: celular «carrito al tocar» — el catálogo ocupa la pantalla; 🛒 (con cantidad) en la barra de Cobrar abre la venta para corregir; 🔍 y 🔄 flotantes; «✏️ Corregir la venta» en Confirmar · V43.7: «Venta actual · Limpiar» solo aparece con productos en el carrito; 📣 comparte el afiche nuevo (og-vao-pos-2.jpg) · V43.6: celular — mini botones P1 · P2 · P3 · ➕ (tocar abre/cierra sus herramientas; arranca cerrado), Mi plan / Salir / ✨ en el encabezado y barra de Cobrar más baja · V43.5: Mi plan igual que planes.html v5.5 (cada tarjeta con sus herramientas y «Incluye ✔ Todo P1 · ✔ Todo P2») · V43.4: con la prueba vencida o en modo consulta, ↩️ Anular queda bloqueado como Ingresar y Ajustar; «Pagar mi plan» → «Elegir mi plan» (el pago lo confirma VAO) · V43.3: «✨ P3 PRO» abre su propia ventana (precio, las 7 herramientas que suma con su explicación, Pedir por WhatsApp y Comparar planes) · V43.2: botones ocultos por el comercio (P2/P3, Mis datos → ⚙️ Ajustes) y cotización propia con fecha (aviso a los 7 días) · en el celular las tarjetas se pliegan (una abierta, las demás en una línea con sus íconos; se recuerda cuál) · pastilla dorada «✨ P3 PRO» que abre Mi plan para quien no tiene P3 · V43.1: «Mi plan» con tarjetas (P2 abraza a P1, P3 abraza a P2; P2 recomendado; tu plan marcado) · V43 (v044.1): botonera desde la MATRIZ CENTRAL de aplicaciones del servidor (un botón por aplicación y su destino); Clientes abre clientes.html (antes Fiados), Mis datos abre misdatos.html e Inventario abre inventario.html (antes los dos abrían la misma ventana); tarjeta P3 PRO (paquete completo) y tarjeta ➕ Complementos (Cobro mixto, Monedas, Juego); Mi plan con P1/P2/P3 PRO y lo que suma cada uno · V42 (v044): la tarjeta P3 muestra cada complemento contratado (cotización, compras, salidas, finanzas, mis deudas, egresos, juego, voz) y abre su pantalla; P2 suma ↩️ Anular venta; 💳 Mi plan coherente (nombres del servidor, sin «Pagar» si el pago en línea está apagado: se pide a VAO) · V41 (v043): las funciones se muestran en TARJETAS por plan — P1 · Esencial, P2 · Gestión y P3 · Complementos — cada una con título, descripción y sus botones; solo las contratadas (sin tarjetas vacías ni botones bloqueados); en celular se apilan · V40 (v043): la barra se arma por plan — P1 Esencial (Ingresar, Hoy, Fiados) y P2 Gestión (Ajustar, Reportes) en grupos; se ve solo lo contratado y habilitado; 🔀 Mixto solo con el complemento Cobro avanzado; ✔️ Revisar inventario solo con P2; 💳 Mi plan muestra tu plan, complementos y vencimiento y permite pedir cambios por WhatsApp · V39: 🔀 Mixto (solo si VAO prende el cobro avanzado): varios medios, monedas, vuelto, fiar lo que falta o cobrar deuda, con Revisar antes de cobrar y reintento sin duplicar; Hoy muestra la caja del servidor (todos los equipos); Mis datos → ✔️ Revisar inventario (solo lectura) · V38: al fiar avisa si el cliente ya debe (solo lectura, no bloquea) · V37: sin 🏠 en el encabezado (cerraba la sesión); Salir pide confirmación; '¿Perdiste o te robaron el celular?' en la pantalla del PIN · V36: PIN oculto ●●●●●● con 👁️; 📣 Compartir con el afiche (menú del celular: elegís WhatsApp Business); PIN: cierra el teclado y muestra ⏳ Verificando visible arriba; aviso único de versión nueva · V35: 📣 comparte planes.html?v=N (WhatsApp guarda la vista previa vieja de un link ya enviado) · V34: botón 💬 Soporte por WhatsApp a VAO Sistemas (encabezado y pantalla del PIN) · V33: app instalable (manifest + service worker sin copias) y recuerda el último comercio · V32: el Historial se abre SOLO (cierra Mis datos antes; en algunos celulares quedaba tapado) · V31: 🕵️ Historial de cambios (solo lectura, backend v040.4) · V30: búsqueda por TODAS las palabras
 const HOY_KEY    = 'vao_ventas_' + PREFIJO + '_' + new Date().toISOString().slice(0, 10);
 const CARRITO_KEY= 'vao_carrito_' + PREFIJO;
@@ -3137,6 +3137,7 @@ function seleccionarMetodo(metodo) {
         panelFiado.style.display = 'block';
         _cliCargar();   // V43.34: lista de clientes para buscar mientras se escribe
         consultarDeudaFiado(); // V38
+        _btnFiadoEspera(false);   // V43.37: sin cliente el botón dice «Escribí el cliente»
     } else {
         panelQR.style.display = 'none';
         panelMP.style.display = 'none';
@@ -3395,6 +3396,19 @@ async function confirmarVentaFiado() {
             mostrarToast('❌ Ingresá el nombre del cliente', 'rojo');
             return;
         }
+        // V43.37: antes de fiar se termina de ver si el cliente ya debe. Si debe y el aviso recién apareció, se frena una vez para que se lea.
+        const _clv = _claveFiado();
+        if (_clv !== _deudaFiadoClave || _deudaFiadoProm) {
+            clearTimeout(window._tFiadoDeuda);
+            await consultarDeudaFiado();
+            const _av = document.getElementById('fiadoDeudaAviso');
+            if (_av && _av.style.display === 'block' && /ya debe/.test(_av.textContent) && _deudaFiadoVista !== _clv) {
+                _deudaFiadoVista = _clv;
+                mostrarToast('⚠️ Revisá la deuda del cliente y tocá Confirmar de nuevo para fiar.', 'naranja');
+                return;
+            }
+        }
+        _deudaFiadoVista = _clv;
 
         const sinStock = ventaActual.filter(item => {
             const p = productos.find(pr => pr.id === item.id);
@@ -4878,30 +4892,50 @@ function _ocultarAvisoDeudaFiado() {
     const av = document.getElementById('fiadoDeudaAviso');
     if (av) { av.style.display = 'none'; av.textContent = ''; }
 }
-async function consultarDeudaFiado() {
-    if (_leerVentaEnCurso()) return; // fiado ya enviado: datos congelados, no se consulta
+// V43.37: mientras se consulta, el Confirmar espera («⏳ Revisando si ya debe…»): el fiado no sale antes de ver la deuda.
+let _deudaFiadoProm = null, _deudaFiadoVista = '';
+function _claveFiado() {
+    const cliente = (document.getElementById('fiadoCliente').value || '').trim(), telefono = (document.getElementById('fiadoTelefono').value || '').replace(/\D/g, '');
+    return telefono ? 'T:' + telefono : (cliente ? 'C:' + cliente.toUpperCase() : '');
+}
+function _btnFiadoEspera(esperando) {   // estado del botón con Fiado: sin cliente → «Escribí el cliente» · consultando → «⏳ Revisando si ya debe…»
+    const b = document.getElementById('btnOkConfirm'); if (!b || metodoPagoActual !== 'fiado' || _leerVentaEnCurso() || /Procesando|Confirmado/.test(b.textContent)) return;
+    const nombre = (document.getElementById('fiadoCliente').value || '').trim();
+    if (esperando || _deudaFiadoProm) { b.disabled = true; b.textContent = '⏳ Revisando si ya debe…'; }
+    else if (!nombre) { b.disabled = true; b.textContent = 'Escribí el cliente'; }
+    else { b.disabled = false; b.textContent = '✅ Confirmar'; }
+}
+function consultarDeudaFiado() {
+    if (_leerVentaEnCurso()) return Promise.resolve(); // fiado ya enviado: datos congelados, no se consulta
     const cliente = (document.getElementById('fiadoCliente').value || '').trim();
     const telefono = (document.getElementById('fiadoTelefono').value || '').replace(/\D/g, '');
-    const clave = telefono ? 'T:' + telefono : (cliente ? 'C:' + cliente.toUpperCase() : '');
-    if (!clave) { _deudaFiadoClave = ''; _deudaFiadoSeq++; _ocultarAvisoDeudaFiado(); return; }
-    if (clave === _deudaFiadoClave) return; // ya consultado para este cliente
-    _deudaFiadoClave = clave;
+    const clave = _claveFiado();
+    if (!clave) { _deudaFiadoClave = ''; _deudaFiadoSeq++; _deudaFiadoProm = null; _ocultarAvisoDeudaFiado(); _btnFiadoEspera(false); return Promise.resolve(); }
+    if (clave === _deudaFiadoClave) return _deudaFiadoProm || Promise.resolve(); // ya consultado (o consultándose) para este cliente
+    _deudaFiadoClave = clave; _deudaFiadoVista = '';   // cliente nuevo en pantalla: su deuda todavía no se vio
     const miSeq = ++_deudaFiadoSeq;
     _ocultarAvisoDeudaFiado();
-    let r = null;
-    try {
-        r = await _llamarAPI('getFiadosCliente', telefono ? { token: _tokenActual(), telefono: telefono } : { token: _tokenActual(), cliente: cliente });
-    } catch (e) { r = null; }
-    if (miSeq !== _deudaFiadoSeq) return; // cambió el cliente mientras se consultaba
-    if (!r || r.error || !(r.totalDeuda > 0) || !(r.cantFiados > 0)) { _ocultarAvisoDeudaFiado(); return; }
-    const vencidos = (r.fiados || []).filter(f => String(f.estado || '').toUpperCase() === 'VENCIDO').length;
-    const nombre = String(r.cliente || cliente || 'Este cliente').trim().toUpperCase();
-    const txt = '⚠️ ' + nombre + ' ya debe $' + Math.round(r.totalDeuda).toLocaleString('es-AR') +
-        ' en ' + r.cantFiados + (r.cantFiados === 1 ? ' fiado' : ' fiados') +
-        (vencidos ? ' (' + vencidos + (vencidos === 1 ? ' vencido)' : ' vencidos)') : '') +
-        '. Podés fiar igual.';
-    const av = document.getElementById('fiadoDeudaAviso');
-    if (av) { av.textContent = txt; av.style.display = 'block'; }
+    const av0 = document.getElementById('fiadoDeudaAviso');
+    if (av0) { av0.textContent = '⏳ Revisando si ' + (cliente || 'el cliente') + ' ya debe…'; av0.style.display = 'block'; }
+    _btnFiadoEspera(true);
+    _deudaFiadoProm = (async function () {
+        let r = null;
+        try {
+            r = await _llamarAPI('getFiadosCliente', telefono ? { token: _tokenActual(), telefono: telefono } : { token: _tokenActual(), cliente: cliente });
+        } catch (e) { r = null; }
+        if (miSeq !== _deudaFiadoSeq) return; // cambió el cliente mientras se consultaba
+        _deudaFiadoProm = null; _btnFiadoEspera(false);   // V43.37
+        if (!r || r.error || !(r.totalDeuda > 0) || !(r.cantFiados > 0)) { _ocultarAvisoDeudaFiado(); return; }   // sin deuda o sin respuesta: no se muestra nada (nunca bloquea)
+        const vencidos = (r.fiados || []).filter(f => String(f.estado || '').toUpperCase() === 'VENCIDO').length;
+        const nombre = String(r.cliente || cliente || 'Este cliente').trim().toUpperCase();
+        const txt = '⚠️ ' + nombre + ' ya debe $' + Math.round(r.totalDeuda).toLocaleString('es-AR') +
+            ' en ' + r.cantFiados + (r.cantFiados === 1 ? ' fiado' : ' fiados') +
+            (vencidos ? ' (' + vencidos + (vencidos === 1 ? ' vencido)' : ' vencidos)') : '') +
+            '. Podés fiar igual.';
+        const av = document.getElementById('fiadoDeudaAviso');
+        if (av) { av.textContent = txt; av.style.display = 'block'; }
+    })();
+    return _deudaFiadoProm;
 }
 ['fiadoCliente', 'fiadoTelefono'].forEach(function (id) {
     document.getElementById(id).addEventListener('change', consultarDeudaFiado); // V38: al pasar al otro campo
@@ -4910,6 +4944,8 @@ async function consultarDeudaFiado() {
     document.getElementById(id).addEventListener('input', function () {
         if (_leerVentaEnCurso()) return; // un fiado en curso ya tiene sus datos congelados
         _guardarBorrador('fiado', { cliente: document.getElementById('fiadoCliente').value, telefono: document.getElementById('fiadoTelefono').value });
+        clearTimeout(window._tFiadoDeuda); window._tFiadoDeuda = setTimeout(consultarDeudaFiado, 700);
+        _btnFiadoEspera(false);   // V43.37: se consulta al dejar de escribir (no hace falta salir del campo)
     });
 });
 
