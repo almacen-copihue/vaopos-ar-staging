@@ -147,7 +147,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--blanco); color:var(--t
 </div>
 
 <script>
-const APP_VERSION = 9; // V9 (servidor v045.4): ventas del cobro avanzado con su medio real (getVentas.pagosPorVenta): totales por medio, filtro y ticket con cada pago. V8: con un día elegido, 🏦 Caja del día por medio según el servidor (separa el cobro mixto en cada medio e incluye cobros de fiados)
+const APP_VERSION = 10; // V10: aviso si la carga tarda, reintentar y mensaje claro cuando todavía no hay ventas · V9 (servidor v045.4): ventas del cobro avanzado con su medio real (getVentas.pagosPorVenta): totales por medio, filtro y ticket con cada pago. V8: con un día elegido, 🏦 Caja del día por medio según el servidor (separa el cobro mixto en cada medio e incluye cobros de fiados)
 const API_URL = 'https://script.google.com/macros/s/AKfycbzlfo16ivECUH-qUkjIllj636bK9uE9GuFBxaddKK3KQT06xnrv1BObwlvFQ_3WvY_f/exec';
 // Paso 11: reportes.html no tenía prefijo ni token propios — por eso
 // getVentas se llamaba sin prefijo y siempre traía las ventas de "NE"
@@ -185,10 +185,13 @@ async function init() {
             '<div class="loading" style="color:var(--rojo);">❌ Sesión no encontrada. Volvé a entrar desde el POS.</div>';
         return;
     }
+    // V10 (v045.5): si tarda, se avisa (la planilla puede demorar con muchas ventas); nunca queda una pantalla quieta sin explicación.
+    const _lento = setTimeout(() => { const l = document.querySelector('#appContent .loading div:last-child'); if (l) l.textContent = 'Cargando ventas… la planilla está tardando, esperá unos segundos más.'; }, 6000);
     try {
         const url = API_URL + '?action=getVentas&prefijo=' + PREFIJO + '&data=' + encodeURIComponent(JSON.stringify({ token: _tokenActual() }));
         const r = await fetch(url, { redirect:'follow' });
         const data = await r.json();
+        clearTimeout(_lento);
         if (data.error) {
             document.getElementById('appContent').innerHTML =
                 '<div class="loading" style="color:var(--rojo);">❌ ' + data.error + '</div>';
@@ -198,9 +201,12 @@ async function init() {
         pagosPorVenta = data.pagosPorVenta || {};
         diasSeleccionados.add(_fechaLocalISO(new Date()));
         renderApp();
+        if (!todasVentas.length) document.getElementById('appContent').insertAdjacentHTML('afterbegin',
+            '<div style="margin:12px;padding:12px;border-radius:12px;background:#e3f2fd;color:#0d47a1;font-weight:700;">📭 Todavía no hay ventas registradas. Cuando cobres desde el POS van a aparecer acá.</div>');
     } catch(e) {
+        clearTimeout(_lento);
         document.getElementById('appContent').innerHTML =
-            '<div class="loading" style="color:var(--rojo);">❌ Error al cargar. Verificá la conexión.</div>';
+            '<div class="loading" style="color:var(--rojo);">❌ No se pudieron cargar las ventas. Verificá la conexión.<br><button onclick="location.reload()" style="margin-top:10px;padding:8px 16px;border:none;border-radius:10px;background:#1565c0;color:#fff;font-weight:800;">Reintentar</button></div>';
     }
 }
 
