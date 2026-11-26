@@ -169,6 +169,26 @@
     outline-offset: 3px;
   }
 
+  /* v10: invitación tranquila a crear la cuenta (lleva al formulario de la prueba gratis de planes.html) */
+  .crear-row{
+    text-align:center;
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  a.crear-link{
+    display:inline-block;
+    margin-top: 4px;
+    color: var(--green);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  a.crear-link:hover{ color: var(--green-hover); }
+  a.crear-link:focus-visible{ outline: 2px solid var(--blue); outline-offset: 3px; }
+  .error-slot .error-crear{ margin-top: 4px; color: var(--muted); }
+  .error-slot .error-crear a{ color: var(--green); font-weight: 600; }
+
   .admin-row{
     text-align:center;
     margin-top: 26px;
@@ -242,10 +262,16 @@
         >
         <div class="error-slot" aria-live="polite">
           <p id="error-msg" hidden>Código inválido</p>
+          <p id="error-crear" class="error-crear" hidden>¿No tenés código? <a href="planes.html#empezar">Creá tu cuenta</a> y te lo enviamos por correo.</p>
         </div>
 
         <button type="submit" id="entrar">Entrar</button>
       </form>
+    </div>
+
+    <div class="crear-row">
+      <span>¿Todavía no tenés cuenta?</span><br>
+      <a class="crear-link" id="crear-cuenta" href="planes.html#empezar">Creala ahora · 7 días gratis →</a>
     </div>
 
     <div class="admin-row">
@@ -257,7 +283,7 @@
   <span class="version-tag" id="version-tag"></span>
 
 <script>
-  const APP_VERSION = 9;
+  const APP_VERSION = 10;   // v10: «¿Todavía no tenés cuenta? Creala ahora · 7 días gratis →» (planes.html#empezar)
 
   document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
 
@@ -268,6 +294,7 @@
 
   function mostrarError(mostrar){
     errorMsg.hidden = !mostrar;
+    document.getElementById('error-crear').hidden = !mostrar;   // v10
     input.classList.toggle('invalid', mostrar);
   }
 
