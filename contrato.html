@@ -276,7 +276,7 @@ footer { text-align: center; color: var(--suave); font-size: .82rem; padding: 0 
 'use strict';
 // ── Configuración ─────────────────────────────────────────────────────────────
 const API_URL = 'https://script.google.com/macros/s/AKfycbzlfo16ivECUH-qUkjIllj636bK9uE9GuFBxaddKK3KQT06xnrv1BObwlvFQ_3WvY_f/exec'; // STAGING
-const VERSION_PAGINA = 'contrato.html V3.1';
+const VERSION_PAGINA = 'contrato.html V3.2';   // V3.2: aviso de versión (vao-version.js)
 // V3: Volver → al POS del mismo comercio (si vino con ?p=XX); si no, atrás o a la portada.
 function volverAlPOS() {
   const p = String(new URLSearchParams(location.search).get('p') || '').trim().toUpperCase();
@@ -759,5 +759,10 @@ $('btnOlvidar').addEventListener('click', olvidar);
 setInterval(tic, 1000);
 iniciar();
 </script>
+<!-- v045.9 · aviso de versión: «se actualizó» y «hay una versión nueva» (vao-version.js + versiones.json) -->
+<script>
+window.VAO_PAGINA = { id: 'contrato', nombre: 'Contrato', version: '3.2' };
+</script>
+<script src="vao-version.js"></script>
 </body>
 </html>

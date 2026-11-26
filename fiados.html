@@ -227,7 +227,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--blanco); color:var(--t
 </div>
 
 <script>
-const APP_VERSION = 7; // V7.1 (v045.2): WhatsApp abre primero WhatsApp Business · V7 (v043): según el plan — P1 Esencial = fiado sencillo (se cobra la deuda completa; sin pagos parciales, ficha ni cobros recientes); P2 Gestión = gestión completa. Lo decide el servidor · V6: ficha del cliente (desactivar, reactivar, eliminar sin historial) y 📜 Cobros recientes con Anular (motivo obligatorio, sin duplicar) · V5: junta en una tarjeta al mismo cliente aunque cambien tildes, mayúsculas o espacios (motor v040.6)
+const APP_VERSION = 8; // V7.1 (v045.2): WhatsApp abre primero WhatsApp Business · V7 (v043): según el plan — P1 Esencial = fiado sencillo (se cobra la deuda completa; sin pagos parciales, ficha ni cobros recientes); P2 Gestión = gestión completa. Lo decide el servidor · V6: ficha del cliente (desactivar, reactivar, eliminar sin historial) y 📜 Cobros recientes con Anular (motivo obligatorio, sin duplicar) · V5: junta en una tarjeta al mismo cliente aunque cambien tildes, mayúsculas o espacios (motor v040.6)
 const API_URL = 'https://script.google.com/macros/s/AKfycbzlfo16ivECUH-qUkjIllj636bK9uE9GuFBxaddKK3KQT06xnrv1BObwlvFQ_3WvY_f/exec';
 
 // Mismo esquema seguro que ya usan pos.html y reportes.html — sin sesión
@@ -724,5 +724,10 @@ window.addEventListener('popstate', function () {
 });
 </script>
 
+<!-- v045.9 · aviso de versión: «se actualizó» y «hay una versión nueva» (vao-version.js + versiones.json) -->
+<script>
+window.VAO_PAGINA = { id: 'fiados', nombre: 'Fiados', version: String(APP_VERSION) };
+</script>
+<script src="vao-version.js"></script>
 </body>
 </html>

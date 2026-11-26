@@ -171,5 +171,10 @@ VAO.iniciar({ modulo: 'extra_cotizador', titulo: 'Cotización de productos', ico
   $('btnImprimir').addEventListener('click', () => { if (ACTUAL) { hojaImprimir(ACTUAL); window.print(); } });
 });
 </script>
+<!-- v045.9 · aviso de versión: «se actualizó» y «hay una versión nueva» (vao-version.js + versiones.json) -->
+<script>
+window.VAO_PAGINA = { id: 'cotizador', nombre: 'Cotizador', version: '1' };
+</script>
+<script src="vao-version.js"></script>
 </body>
 </html>

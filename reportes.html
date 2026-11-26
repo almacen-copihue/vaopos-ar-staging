@@ -147,7 +147,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--blanco); color:var(--t
 </div>
 
 <script>
-const APP_VERSION = 10; // V10: aviso si la carga tarda, reintentar y mensaje claro cuando todavía no hay ventas · V9 (servidor v045.4): ventas del cobro avanzado con su medio real (getVentas.pagosPorVenta): totales por medio, filtro y ticket con cada pago. V8: con un día elegido, 🏦 Caja del día por medio según el servidor (separa el cobro mixto en cada medio e incluye cobros de fiados)
+const APP_VERSION = 11; // V10: aviso si la carga tarda, reintentar y mensaje claro cuando todavía no hay ventas · V9 (servidor v045.4): ventas del cobro avanzado con su medio real (getVentas.pagosPorVenta): totales por medio, filtro y ticket con cada pago. V8: con un día elegido, 🏦 Caja del día por medio según el servidor (separa el cobro mixto en cada medio e incluye cobros de fiados)
 const API_URL = 'https://script.google.com/macros/s/AKfycbzlfo16ivECUH-qUkjIllj636bK9uE9GuFBxaddKK3KQT06xnrv1BObwlvFQ_3WvY_f/exec';
 // Paso 11: reportes.html no tenía prefijo ni token propios — por eso
 // getVentas se llamaba sin prefijo y siempre traía las ventas de "NE"
@@ -537,5 +537,10 @@ function cerrarTicket() {
 
 init();
 </script>
+<!-- v045.9 · aviso de versión: «se actualizó» y «hay una versión nueva» (vao-version.js + versiones.json) -->
+<script>
+window.VAO_PAGINA = { id: 'reportes', nombre: 'Reportes', version: String(APP_VERSION) };
+</script>
+<script src="vao-version.js"></script>
 </body>
 </html>

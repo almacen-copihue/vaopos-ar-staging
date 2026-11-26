@@ -51,5 +51,10 @@ VAO.iniciar({ modulo: 'pack2_editor_stock', titulo: 'Anular venta', icono: '鈫╋
   if (!ok) return; VAO.pestanas('tabs', t => { if (t === 'hist') hist(); }); $('dias').onchange = cargar; cargar();
 });
 </script>
+<!-- v045.9 路 aviso de versi贸n: 芦se actualiz贸禄 y 芦hay una versi贸n nueva禄 (vao-version.js + versiones.json) -->
+<script>
+window.VAO_PAGINA = { id: 'anular', nombre: 'Anular venta', version: '1' };
+</script>
+<script src="vao-version.js"></script>
 </body>
 </html>
