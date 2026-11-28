@@ -989,6 +989,7 @@ details.ctr-com[open] > summary { border-bottom:1px solid #EEF2F6; }
             <button class="btn-accion pc43-tab" data-t="pendientes" onclick="pc43Tab('pendientes')">⏳ Elecciones pendientes</button>
             <button class="btn-accion pc43-tab" data-t="historial" onclick="pc43Tab('historial')">📜 Historial</button>
         </div>
+        <div id="pc43Botonera"></div>   <!-- V31: botonera desde la planilla -->
         <div id="pc43Msg"></div>
         <div id="pc43Contenido"><div class="ayuda">Cargando…</div></div>
         <div class="modal-footer">
@@ -1040,7 +1041,7 @@ function _banderaVAO(alto, sinMargen) {
     if (p === 'AR') return '<svg role="img" aria-label="Argentina" viewBox="0 0 30 20" style="' + s + '"><title>Argentina</title><rect width="30" height="20" fill="#74ACDF"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2.3" fill="#F6B40E"/></svg>';
     return '';
 }
-const APP_VERSION = 30;   // V30: une las dos V29 — 💬 Opiniones de los comercios (servidor v046.0) + banderita 🇨🇱/🇦🇷 · V29 (bandera): banderita 🇨🇱/🇦🇷 en la etiqueta de abajo según la dirección · V28: duplicado con botón «Sí, es otra transferencia distinta» (Renovar y Vigencia), referencias repetidas una vez «(3 pagos)», aviso verde que queda escrito al registrar un pago, Historial y vista previa con el nombre del plan (P3 PRO) // V27: «🔄 Renovar» también en la barra del celular (Seleccionado: …) // V25: formularios de pago blindados — titular solo números, n.º de Mercado Pago solo dígitos, ayuda para no confundir «Mercado Pago» con «Transferencia desde Mercado Pago» · V24 (servidor v045.9): 🔄 Renovar — elegís 1, 2, 3, 6 o 12 meses, el servidor calcula el importe y el nuevo vencimiento, y con la referencia se confirma (lo demás sigue en 💳 Vigencia y pagos) · V23 (servidor v045.4): la etiqueta de abajo distingue App · Servidor (getInfo) · Entorno; tocándola se ve el historial de versiones del servidor · V22.5: el Cotizador figura en P2 Gestión (no como complemento) · V22.4: cobro «como en un cuaderno» (casilla «aceptó los Términos de uso» si no hay contrato) y 🏠 comercio interno de VAO en Vigencia y pagos · V22.3: «Complemento opcional» (antes «Complemento P3»); el candado de pagos explica qué falta en STAGING y en Producción · V22.2 (v044.2): complementos «para P1, P2, P3 PRO» (antes los códigos internos); fila «Precio mensual» (dice «/ lanzamiento» solo si hay alguno); la cotización la carga cada comercio (VAO también puede, como soporte) · V22 (v044.1): planes P1 · P2 · P3 PRO integrados (activación en un paso con vista previa, cambio de plan a P3 con el pago), complementos opcionales aparte, botonera de cada comercio desde la matriz central y aviso de combinaciones contradictorias · V21 (v043): 📋 Planes y contrataciones — P1/P2/P3, prestaciones por comercio (catálogo/contratado/habilitado/suspendido), complementos, precios, historial y elecciones pendientes // V20: 💱 Cobro por comercio (cobro avanzado prender/apagar, cotizaciones USD/CLP, cobros sin terminar) y uso de la planilla · V29 (Opiniones): globito cada minuto, aviso flotante, estados y respuesta
+const APP_VERSION = 31;   // V31: 🧱 Botonera y planes desde la planilla (servidor v046.1) — en 📋 Planes y contrataciones: estado, vista previa y preparar BOTONES_VAO / TARJETAS_VAO / PLANES_VAO, con los problemas de cada fila · V30: une las dos V29 — 💬 Opiniones de los comercios (servidor v046.0) + banderita 🇨🇱/🇦🇷 · V29 (bandera): banderita 🇨🇱/🇦🇷 en la etiqueta de abajo según la dirección · V28: duplicado con botón «Sí, es otra transferencia distinta» (Renovar y Vigencia), referencias repetidas una vez «(3 pagos)», aviso verde que queda escrito al registrar un pago, Historial y vista previa con el nombre del plan (P3 PRO) // V27: «🔄 Renovar» también en la barra del celular (Seleccionado: …) // V25: formularios de pago blindados — titular solo números, n.º de Mercado Pago solo dígitos, ayuda para no confundir «Mercado Pago» con «Transferencia desde Mercado Pago» · V24 (servidor v045.9): 🔄 Renovar — elegís 1, 2, 3, 6 o 12 meses, el servidor calcula el importe y el nuevo vencimiento, y con la referencia se confirma (lo demás sigue en 💳 Vigencia y pagos) · V23 (servidor v045.4): la etiqueta de abajo distingue App · Servidor (getInfo) · Entorno; tocándola se ve el historial de versiones del servidor · V22.5: el Cotizador figura en P2 Gestión (no como complemento) · V22.4: cobro «como en un cuaderno» (casilla «aceptó los Términos de uso» si no hay contrato) y 🏠 comercio interno de VAO en Vigencia y pagos · V22.3: «Complemento opcional» (antes «Complemento P3»); el candado de pagos explica qué falta en STAGING y en Producción · V22.2 (v044.2): complementos «para P1, P2, P3 PRO» (antes los códigos internos); fila «Precio mensual» (dice «/ lanzamiento» solo si hay alguno); la cotización la carga cada comercio (VAO también puede, como soporte) · V22 (v044.1): planes P1 · P2 · P3 PRO integrados (activación en un paso con vista previa, cambio de plan a P3 con el pago), complementos opcionales aparte, botonera de cada comercio desde la matriz central y aviso de combinaciones contradictorias · V21 (v043): 📋 Planes y contrataciones — P1/P2/P3, prestaciones por comercio (catálogo/contratado/habilitado/suspendido), complementos, precios, historial y elecciones pendientes // V20: 💱 Cobro por comercio (cobro avanzado prender/apagar, cotizaciones USD/CLP, cobros sin terminar) y uso de la planilla · V29 (Opiniones): globito cada minuto, aviso flotante, estados y respuesta
 document.addEventListener('DOMContentLoaded', function(){
     var tag = document.createElement('span');
     tag.id = 'version-tag';
@@ -2512,6 +2513,7 @@ async function cargarPC43() {
     if (!r) { cont.innerHTML = '<div class="ayuda" style="color:var(--rojo);">Sin conexión. No se cambió nada.</div>'; return; }
     if (r.error) { cont.innerHTML = '<div class="ayuda" style="color:var(--rojo);">' + _esc(/no reconocida|desconocida|Acción/i.test(r.error) ? 'El servidor instalado todavía no tiene Planes y contrataciones (hace falta Code.gs v043).' : r.error) + '</div>'; return; }
     PC43.datos = r;
+    _botoneraV31();   // V31
     const b = document.getElementById('badgePC43'); if (b) { b.style.display = r.intereses.length ? '' : 'none'; b.textContent = r.intereses.length; }
     pc43Tab(PC43.tab);
 }
@@ -2636,6 +2638,38 @@ async function pc43GuardarComplemento(clave) {
     await _pc43Enviar('guardarComplemento', Object.assign({ clave, precioRegular: n('pc43CReg_' + clave), precioLanzamiento: n('pc43CLan_' + clave), disponible: document.getElementById('pc43CDisp_' + clave).checked }, ok));
 }
 let _pc43Firma = '';
+// ── V31 (v046.1): 🧱 botonera y planes desde la planilla ──
+let _botFirmaV31 = '';
+async function _botoneraV31() {
+    const box = document.getElementById('pc43Botonera'); if (!box) return;
+    let r = null; try { r = await _adminApi('estadoBotonera', {}); } catch (e) { r = null; }
+    if (!r || r.error) { box.innerHTML = r && /no reconocida/i.test(r.error || '') ? '<div class="ayuda" style="margin-bottom:8px;">🧱 La botonera desde la planilla necesita el servidor v046.1.</div>' : (r && r.error ? '<div class="ayuda" style="color:var(--rojo);margin-bottom:8px;">🧱 ' + _esc(r.error) + '</div>' : ''); return; }
+    const probs = (r.problemas || []).length ? '<div style="background:#FFF3E0;border:1px solid #FFB74D;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:.84rem;color:#8A4B00;"><b>⚠️ Revisá la planilla (' + r.problemas.length + '):</b>' + r.problemas.map(p => '<div>• ' + _esc(p) + '</div>').join('') + '<div class="ayuda">Mientras tanto, para esos datos se usa lo del sistema: nada deja de funcionar.</div></div>' : '';
+    if (r.pendiente) {
+        box.innerHTML = '<div style="background:linear-gradient(135deg,#4A148C,#7B1FA2);color:#fff;padding:12px 14px;border-radius:12px;margin-bottom:10px;">' +
+            '<div style="font-weight:800;">🧱 Botonera y planes desde la planilla</div>' +
+            '<div style="font-size:.85rem;opacity:.92;margin:4px 0 8px;">Crea BOTONES_VAO y TARJETAS_VAO y completa PLANES_VAO: desde ahí se cambian los nombres, íconos, tarjetas y descripciones, sin subir versiones. Hasta prepararla, el POS usa los valores del sistema. No toca ventas, fiados ni pagos.</div>' +
+            '<button class="btn-accion" style="background:#FFD54F;color:#1A1A1A;font-weight:800;" onclick="_botPreviaV31()">Ver qué cambia (vista previa)</button><div id="botPreviaV31"></div></div>' + probs;
+    } else {
+        box.innerHTML = '<div class="ayuda" style="background:#E8F5E9;border-radius:10px;padding:7px 10px;margin-bottom:8px;color:#1B5E20;">🧱 Botonera desde la planilla: <b>' + r.botones + ' botones</b> en <b>' + r.tarjetas + ' tarjetas</b> (BOTONES_VAO, TARJETAS_VAO) y descripción de cada plan en PLANES_VAO. Los cambios en la planilla se ven al tocar 🔄 Actualizar en el POS.</div>' + probs;
+    }
+}
+async function _botPreviaV31() {
+    const box = document.getElementById('botPreviaV31'); box.innerHTML = '<div class="ayuda" style="color:#fff;">Calculando…</div>';
+    let r = null; try { r = await _adminApi('prepararBotonera', {}); } catch (e) { r = null; }
+    if (!r || r.error) { box.innerHTML = '<div style="color:#FFCDD2;">' + _esc(r ? r.error : 'Sin conexión. No se cambió nada.') + '</div>'; return; }
+    _botFirmaV31 = r.firma || '';
+    box.innerHTML = '<div style="background:#fff;color:#222;border-radius:8px;padding:10px;margin-top:8px;"><b>Vista previa (no se cambió nada)</b><ul style="margin:6px 0;padding-left:18px;">' + r.cambios.map(c => '<li>' + _esc(c) + '</li>').join('') + '</ul>' +
+        '<b>Comercios que cambian</b><br>' + ((r.impacto || []).length ? r.impacto.map(i => '<div>• ' + _esc(i) + '</div>').join('') : 'Ninguno.') +
+        '<div class="ayuda" style="margin-top:6px;">Escribí arriba el operador y el motivo. Queda en 📜 Historial.</div>' +
+        (r.cambios.length ? '<button class="btn-accion" style="background:#2E7D32;color:#fff;margin-top:6px;" onclick="_botConfirmarV31(this)">Confirmar: preparar la botonera</button>' : '') + '</div>';
+}
+async function _botConfirmarV31(btn) {
+    const ok = _pc43Cambio(); if (!ok) return;
+    btn.disabled = true;
+    const r = await _pc43Enviar('prepararBotonera', Object.assign({ confirmar: true, firma: _botFirmaV31 }, ok));
+    if (!r || !r.success) btn.disabled = false;
+}
 async function pc43MigrarVista() {
     const box = document.getElementById('pc43Mig'); box.innerHTML = '<div class="ayuda">Calculando…</div>';
     let r = null; try { r = await _adminApi('migrarPlanes', {}); } catch (e) { r = null; }

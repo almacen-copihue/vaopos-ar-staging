@@ -230,6 +230,7 @@ details p { margin: 0; padding: 0 16px 14px; }
 footer { padding: 26px 0 40px; font-size: .88rem; color: var(--suave); }
 .oculto { display: none !important; }
 @media (min-width: 720px) { body { font-size: 18px; } .ticket { margin: -7px 40px 0; } }
+.p5-desc { margin: 4px 0 8px; font-size: .86rem; line-height: 1.35; color: #455A64; }   /* 5.10: descripción del plan (PLANES_VAO) */
 </style>
 </head>
 <body>
@@ -474,6 +475,7 @@ function htmlPlanV3(p) {
     '<label class="elegir"><input type="radio" name="planElegido" value="' + esc(p.codigo) + '"' + (el ? ' checked' : '') + '> Elegir ' + esc(p.nombre) + '</label></div>';
 }
 const NOM5 = { BASICO: 'P1', PRO: 'P2', PLUS: 'P3' }, BASES5 = ['BASICO', 'PRO', 'PLUS'];
+function grupoNom510(g) { const n = CATALOGO && CATALOGO.grupos && CATALOGO.grupos[g]; return n || { P1: 'P1 Esencial', P2: 'P2 Gestión', P3: 'P3 PRO' }[g] || g; }   // 5.10: nombres desde PLANES_VAO
 function iconos5(g) { const apps = (CATALOGO && CATALOGO.apps) || []; return '<div class="iconos">' + apps.filter(a => a.grupo === g).map(a => '<span class="ic5" title="' + esc(a.descripcion) + '">' + esc(a.icono) + ' ' + esc(a.nombre) + '</span>').join('') + '</div>'; }
 function env5(n, tit, g) { return '<div class="env e' + n + '"><span class="env-tit">' + esc(tit) + '</span>' + iconos5(g) + '</div>'; }
 function htmlPlanV5(p) {
@@ -483,10 +485,10 @@ function htmlPlanV5(p) {
   // composición envolvente: cada plan contiene al anterior dentro de su propia línea
   // v5.5: cada tarjeta muestra SOLO sus herramientas, con su etiqueta encima; lo que trae de los planes anteriores va en una línea de pastillas
   const cant = g => ((CATALOGO && CATALOGO.apps) || []).filter(a => a.grupo === g).length;
-  const inc = n >= 2 ? '<div class="inc5"><span class="inc5-t">Incluye</span>' + ['P1 Esencial', 'P2 Gestión'].slice(0, n - 1).map((t, i) => '<span class="inc5-p e' + (i + 1) + '">✔ Todo ' + esc(t) + ' <small>· ' + cant('P' + (i + 1)) + '</small></span>').join('') + '</div>' : '';
-  const cuerpo = inc + env5(n, (n === 1 ? '' : '+ ') + ['', 'P1 Esencial', 'P2 Gestión', 'P3 PRO'][n], 'P' + n);
+  const inc = n >= 2 ? '<div class="inc5"><span class="inc5-t">Incluye</span>' + [grupoNom510('P1'), grupoNom510('P2')].slice(0, n - 1).map((t, i) => '<span class="inc5-p e' + (i + 1) + '">✔ Todo ' + esc(t) + ' <small>· ' + cant('P' + (i + 1)) + '</small></span>').join('') + '</div>' : '';
+  const cuerpo = inc + env5(n, (n === 1 ? '' : '+ ') + grupoNom510('P' + n), 'P' + n);
   return '<div class="p5 plan elegible ' + p.codigo + (el ? ' elegido' : '') + '" data-plan="' + esc(p.codigo) + '">' + (n === 3 ? '<span class="tag">COMPLETO</span>' : n === 2 ? '<span class="tag reco">⭐ RECOMENDADO</span>' : '') +
-    '<div class="p5-cab"><span class="p5-sello">' + NOM5[p.codigo] + '</span><h3>' + esc(p.nombre) + '</h3></div>' + precio + cuerpo +
+    '<div class="p5-cab"><span class="p5-sello">' + NOM5[p.codigo] + '</span><h3>' + esc(p.nombre) + '</h3></div>' + precio + (p.descripcion ? '<p class="p5-desc">' + esc(p.descripcion) + '</p>' : '') + cuerpo +
     '<label class="elegir"><input type="radio" name="planElegido" value="' + esc(p.codigo) + '"' + (el ? ' checked' : '') + '> Elegir ' + esc(p.nombre) + '</label></div>';
 }
 function pintarPlanesV3() {
@@ -793,7 +795,7 @@ cargarPlanes().then(retomar);
 </script>
 <!-- v045.9 · aviso de versión: «se actualizó» y «hay una versión nueva» (vao-version.js + versiones.json) -->
 <script>
-window.VAO_PAGINA = { id: 'planes', nombre: 'Planes', version: '5.9' };
+window.VAO_PAGINA = { id: 'planes', nombre: 'Planes', version: '5.10' };   // 5.10: nombres y descripción de cada plan desde la planilla (PLANES_VAO)
 </script>
 <script src="vao-version.js"></script>
 </body>

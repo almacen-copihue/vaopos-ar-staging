@@ -16,6 +16,19 @@
 .filtros button.activo { border-color: var(--grupo); background: var(--grupo-fondo); color: var(--grupo-tinta); }
 .st0 { color: var(--rojo); font-weight: 900; } .stb { color: var(--naranja); font-weight: 900; }
 .revision { white-space: pre-wrap; font-size: .86rem; }
+/* v2: gráficos */
+#graficos { margin-bottom: 10px; }
+.g-titulo { font-weight: 800; font-size: .86rem; margin: 0 0 6px; }
+.g-nota { font-size: .78rem; color: var(--suave); margin: -4px 0 6px; }
+.torta-v12 { display: flex; align-items: center; gap: 14px; }
+.torta-v12 svg { width: 130px; height: 130px; flex: 0 0 130px; }
+.torta-num { font-size: 4.2px; font-weight: 900; fill: var(--texto); } .torta-sub { font-size: 3px; fill: var(--suave); }
+.torta-ref { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; font-size: .8rem; }
+.torta-ref div { display: flex; align-items: center; gap: 6px; } .torta-ref span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.torta-ref i, .g-ref i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex: 0 0 10px; margin-right: 5px; vertical-align: -1px; }
+.g-estado { display: flex; height: 18px; border-radius: 9px; overflow: hidden; background: #ECEFF1; }
+.g-estado span { display: block; }
+.g-ref { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: .8rem; }
 </style>
 </head>
 <body>
@@ -24,6 +37,7 @@
 <main class="vao oculto" id="vaoContenido">
   <div id="vaoAviso" class="oculto"></div>
   <div class="vao-kpis" id="kpis"></div>
+  <div class="vao-tarjeta oculto" id="graficos"></div>
   <nav class="vao-pestanas" id="tabs" role="tablist">
     <button data-tab="stock" class="activo">📦 Stock</button>
     <button data-tab="revision">✔️ Revisar antes de vender</button>
@@ -49,6 +63,34 @@
 <script src="vao-comun.js"></script>
 <script>
 const $ = id => document.getElementById(id); let PRODS = [], FILTRO = 'todos'; const UMBRAL = 3;
+function _esc(t) { return VAO.esc(t); }
+// V12 · gráficos dibujados por la página (SVG, sin programas de afuera). Los montos son los que ya calcula la pantalla con los datos del servidor.
+const COLORES_V12 = ['#2E7D32', '#1E88E5', '#FB8C00', '#8E24AA', '#E53935', '#00897B', '#6D4C41', '#546E7A'];
+function _tortaV12(pares, centro, sub) {   // pares: [[nombre, monto], ...] ya ordenados
+    const tot = pares.reduce((s, p) => s + p[1], 0); if (!(tot > 0)) return '';
+    let acum = 0;
+    const arcos = pares.map((p, i) => { const pct = p[1] / tot * 100, a = '<circle r="15.9155" cx="21" cy="21" fill="none" stroke="' + COLORES_V12[i % COLORES_V12.length] + '" stroke-width="6.5" stroke-dasharray="' + pct.toFixed(3) + ' ' + (100 - pct).toFixed(3) + '" stroke-dashoffset="' + (25 - acum).toFixed(3) + '"></circle>'; acum += pct; return a; }).join('');
+    return '<div class="torta-v12"><svg viewBox="0 0 42 42" role="img" aria-label="Gráfico de torta">' + '<circle r="15.9155" cx="21" cy="21" fill="none" stroke="#ECEFF1" stroke-width="6.5"></circle>' + arcos +
+        '<text x="21" y="21" text-anchor="middle" class="torta-num">' + _esc(centro) + '</text><text x="21" y="26.5" text-anchor="middle" class="torta-sub">' + _esc(sub || '') + '</text></svg>' +
+        '<div class="torta-ref">' + pares.map((p, i) => '<div><i style="background:' + COLORES_V12[i % COLORES_V12.length] + '"></i><span>' + _esc(p[0]) + '</span><b>' + Math.round(p[1] / tot * 100) + '%</b></div>').join('') + '</div></div>';
+}
+
+// v2: cuánto vale lo que tenés, por categoría (stock × costo, como el total de arriba) y cómo está el stock.
+function graficos() {
+  const g = $('graficos'); if (!PRODS.length) { g.classList.add('oculto'); return; }
+  const porCat = {}; let sinCosto = 0;
+  PRODS.forEach(p => { const v = Math.max(0, p.stock) * (p.costo || 0); if (!(p.costo > 0) && p.stock > 0) sinCosto++; if (v > 0) { const c = String(p.category || p.categoria || 'GENERAL').toUpperCase(); porCat[c] = (porCat[c] || 0) + v; } });
+  let pares = Object.entries(porCat).sort((a, b) => b[1] - a[1]); if (pares.length > 6) pares = pares.slice(0, 5).concat([['OTRAS', pares.slice(5).reduce((s, p) => s + p[1], 0)]]);
+  const tot = pares.reduce((s, p) => s + p[1], 0);
+  const ag = PRODS.filter(p => p.stock <= 0).length, ba = PRODS.filter(p => p.stock > 0 && p.stock <= UMBRAL).length, bien = PRODS.length - ag - ba;
+  const seg = (n, col, txt) => n ? '<span style="flex:' + n + ';background:' + col + '" title="' + txt + ': ' + n + '"></span>' : '';
+  g.innerHTML = '<h2 style="margin:0 0 8px">📊 De un vistazo</h2>' +
+    (tot > 0 ? '<div class="g-titulo">🥧 Cuánto vale tu mercadería, por categoría (al costo)</div>' + _tortaV12(pares, VAO.pesos(Math.round(tot)), 'al costo') : '<div class="g-titulo">🥧 Para ver cuánto vale tu mercadería, cargá el costo de los productos.</div>') +
+    (sinCosto ? '<div class="g-nota">' + sinCosto + ' producto(s) con stock no tienen costo cargado: no entran en la torta.</div>' : '') +
+    '<div class="g-titulo" style="margin-top:12px">🚦 Cómo está tu stock</div><div class="g-estado">' + seg(ag, '#C62828', 'Sin stock') + seg(ba, '#FB8C00', 'Poco stock') + seg(bien, '#2E7D32', 'Bien') + '</div>' +
+    '<div class="g-ref"><span><i style="background:#C62828"></i>Sin stock <b>' + ag + '</b></span><span><i style="background:#FB8C00"></i>Poco (≤ ' + UMBRAL + ') <b>' + ba + '</b></span><span><i style="background:#2E7D32"></i>Bien <b>' + bien + '</b></span></div>';
+  g.classList.remove('oculto');
+}
 function pintar() {
   const q = $('buscar').value.trim().toUpperCase().split(/\s+/).filter(Boolean);
   let l = PRODS.filter(p => q.every(w => (p.name + ' ' + p.codigo + ' ' + (p.proveedor || '')).toUpperCase().includes(w)));
@@ -67,6 +109,7 @@ async function cargar() {
     const ag = PRODS.filter(p => p.stock <= 0).length, ba = PRODS.filter(p => p.stock > 0 && p.stock <= UMBRAL).length, val = PRODS.reduce((s, p) => s + Math.max(0, p.stock) * (p.costo || 0), 0);
     $('kpis').innerHTML = '<div class="vao-kpi"><small>Productos</small><b>' + PRODS.length + '</b></div><div class="vao-kpi"><small>Agotados</small><b style="color:' + (ag ? 'var(--rojo)' : 'inherit') + '">' + ag + '</b></div>' +
       '<div class="vao-kpi"><small>Poco stock</small><b>' + ba + '</b></div><div class="vao-kpi"><small>Stock valorizado (al costo)</small><b>' + VAO.pesos(Math.round(val)) + '</b></div>';
+    graficos();   // v2
     pintar();
   } catch (e) { $('tabla').innerHTML = '<tr><td colspan="5">' + VAO.vacio('📡', VAO.sinConexion) + '</td></tr>'; }
 }
@@ -88,7 +131,7 @@ VAO.iniciar({ modulo: 'pack2_editor_stock', titulo: 'Inventario', icono: '🗂�
 </script>
 <!-- v045.9 · aviso de versión: «se actualizó» y «hay una versión nueva» (vao-version.js + versiones.json) -->
 <script>
-window.VAO_PAGINA = { id: 'inventario', nombre: 'Inventario', version: '1' };
+window.VAO_PAGINA = { id: 'inventario', nombre: 'Inventario', version: '2' };   // v2: 🥧 valor de la mercadería por categoría y estado del stock en colores
 </script>
 <script src="vao-version.js"></script>
 </body>
