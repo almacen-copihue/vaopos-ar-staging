@@ -160,6 +160,11 @@
     transition: background-color 0.15s ease, transform 0.05s ease;
   }
 
+  /* v12: ayuda para quien no recuerda su código */
+  .olvido-v12{ margin-top: 14px; text-align: center; font-size: .9rem; line-height: 1.45; color: inherit; opacity: .92; }
+  .olvido-v12 a{ display: inline-block; margin-top: 4px; font-weight: 700; color: #25D366; text-decoration: none; }
+  .olvido-v12 a:hover{ text-decoration: underline; }
+  .olvido-v12 .olvido-pista{ font-size: .8rem; opacity: .75; margin-top: 3px; }
   button#entrar:hover{ background: var(--green-hover); }
   button#entrar:active{ background: var(--green-active); transform: translateY(1px); }
 
@@ -267,6 +272,13 @@
 
         <button type="submit" id="entrar">Entrar</button>
       </form>
+
+    <!-- v12: quien no recuerda su código pide ayuda por WhatsApp (mismo número de soporte que el POS) -->
+    <div class="olvido-v12">
+      ¿No te acordás tu código?
+      <a id="olvido-codigo" href="https://wa.me/5492944907380?text=%C2%A1Hola%20VAO%20Sistemas!%20No%20me%20acuerdo%20mi%20c%C3%B3digo%20de%20VAO%20POS.%0AMi%20comercio%20es%3A%20" target="_blank" rel="noopener">💬 Escribinos por WhatsApp</a>
+      <div class="olvido-pista">Está en el correo «Tu prueba de VAO POS está lista».</div>
+    </div>
     </div>
 
     <div class="crear-row">
@@ -283,7 +295,7 @@
   <span class="version-tag" id="version-tag"></span>
 
 <script>
-  const APP_VERSION = 11;   // v10: «¿Todavía no tenés cuenta? Creala ahora · 7 días gratis →» (planes.html#empezar)
+  const APP_VERSION = 12;   // v12: «¿No te acordás tu código? Escribinos por WhatsApp» debajo de Entrar · v10: «¿Todavía no tenés cuenta? Creala ahora · 7 días gratis →» (planes.html#empezar)
 
   document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
 
