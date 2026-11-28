@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <link rel="icon" type="image/png" href="favicon-48.png"><!-- logo nuevo VAO -->
+<!-- VAO POS · Admin V29 (STAGING) · 27/11/2026 · V29 (servidor v046.0): botón «💬 Opiniones» con globito (se actualiza cada minuto) y aviso flotante; ventana con filtros, estados NUEVA · VISTA · EN CURSO · RESUELTA (con versión) · DESCARTADA (con motivo) y respuesta al comercio. -->
 <!-- VAO POS · Admin V17 (STAGING) · 24/10/2026 · V17 (backend v040.2): en 📒 Pagos registrados, ✏️ Corregir / ⛔ Anular / confirmar revisión de un cobro; ventana «📊 Cobros» por período; Mercado Pago en línea apagado oculta su botón. -->
 <!-- VAO POS · Admin V16 (STAGING) · 24/10/2026 · V16: en 📒 Pagos registrados, resolver un pago RETENIDO de Mercado Pago (backend v040.1). V15: transferencias con llave única y Mercado Pago. -->
 <!-- VAO POS · Admin V14 (STAGING) · 23/10/2026 · V14: ventana «📄 Contratos», SOLO CONSULTA (estadoContratos + verificarIntegridadContratos + clientesCargados). -->
@@ -633,6 +634,25 @@ body {
         white-space: normal;
     }
 }
+/* ── V29: 💬 Opiniones ── */
+.op-filtros { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.op-filtros button { border:2px solid var(--borde); background:#fff; border-radius:999px; padding:5px 12px; font-weight:700; cursor:pointer; font-family:inherit; font-size:0.82rem; }
+.op-filtros button.activo { background:#37474F; color:#fff; border-color:#37474F; }
+details.op-card { border:1px solid #E1E8F0; border-radius:12px; margin-bottom:8px; background:#fff; }
+details.op-card > summary { list-style:none; cursor:pointer; padding:10px 12px; display:flex; gap:8px; align-items:flex-start; }
+details.op-card > summary::-webkit-details-marker { display:none; }
+details.op-card[open] > summary { border-bottom:1px solid #EEF2F6; }
+.op-tipo { font-size:1.2rem; line-height:1.2; }
+.op-txt { flex:1; min-width:0; font-size:0.88rem; overflow-wrap:anywhere; }
+.op-txt small { display:block; color:var(--gris); font-size:0.74rem; margin-top:2px; }
+.op-est { font-size:0.7rem; font-weight:800; border-radius:8px; padding:2px 7px; white-space:nowrap; }
+.op-est.NUEVA { background:#FFF3E0; color:#E65100; } .op-est.VISTA { background:#E3F2FD; color:#0D47A1; } .op-est.EN_CURSO { background:#EDE7F6; color:#4527A0; }
+.op-est.RESUELTA { background:#E8F5E9; color:#1B5E20; } .op-est.DESCARTADA { background:#ECEFF1; color:#455A64; }
+.op-cuerpo { padding:10px 12px; font-size:0.84rem; }
+.op-cuerpo .op-texto { white-space:pre-wrap; background:#F7F9FC; border-radius:8px; padding:8px; margin-bottom:8px; }
+.op-acc { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.op-campo { width:100%; padding:8px 10px; border:1.5px solid #D5DEE9; border-radius:8px; font-family:inherit; font-size:0.86rem; margin-top:6px; }
+#opAvisoFlotante { position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:100001; background:#263238; color:#fff; border-radius:12px; padding:10px 14px; font-weight:700; font-size:0.88rem; box-shadow:0 6px 18px rgba(0,0,0,.3); cursor:pointer; max-width:92vw; }
 /* ── V14: 📄 Contratos (solo consulta) ── */
 .ctr-franja { background:#FFD54F; color:#3E2A00; border:2px solid #C49000; border-radius:12px; padding:8px 12px; font-weight:800; font-size:0.86rem; text-align:center; margin-bottom:12px; }
 .ctr-franja small { display:block; font-weight:600; font-size:0.76rem; }
@@ -760,6 +780,7 @@ details.ctr-com[open] > summary { border-bottom:1px solid #EEF2F6; }
                     <button class="btn-primario" id="btnPC43" style="background:#283593;" onclick="abrirPC43()">📋 Planes y contrataciones <span id="badgePC43" style="display:none;background:#FFB300;color:#222;border-radius:999px;padding:1px 8px;margin-left:4px;font-size:0.78rem;"></span></button>
                     <button class="btn-primario" id="btnContratos" style="background:#00695C;" onclick="abrirModalContratos()">📄 Contratos</button>
                     <button class="btn-primario" id="btnCobros" style="background:#2E7D32;" onclick="abrirModalCobros()">📊 Cobros</button>
+                    <button class="btn-primario" id="btnOpiniones" style="background:#37474F;" onclick="abrirOpiniones()">💬 Opiniones <span id="badgeOpiniones" style="display:none;background:#FFB300;color:#222;border-radius:999px;padding:1px 8px;margin-left:4px;font-size:0.78rem;"></span></button>   <!-- V29 -->
                     <button class="btn-primario btn-verde" onclick="abrirModalAlta()">
                         ＋ Nuevo cliente
                     </button>
@@ -977,6 +998,24 @@ details.ctr-com[open] > summary { border-bottom:1px solid #EEF2F6; }
     </div>
 </div>
 
+<!-- V29: 💬 Opiniones de los comercios (sugerencias, mejoras y problemas). Solo escribe estado y respuesta; el texto del comercio no se toca. -->
+<div class="modal-overlay" id="modalOpiniones">
+    <div class="modal" style="max-width:760px;">
+        <div class="modal-titulo">💬 Opiniones de los comercios</div>
+        <div class="ayuda" id="opResumen" style="margin-bottom:8px;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:8px;">
+            <div class="form-grupo" style="margin:0;"><label class="form-label">Operador (quién responde)</label><input class="form-input" id="opOperador" maxlength="40" style="width:170px;" placeholder="Ej.: Víctor"></div>
+            <div class="form-grupo" style="margin:0;"><label class="form-label">Comercio</label><select class="form-input" id="opComercio" onchange="_opFijas.clear();pintarOpiniones()"><option value="">Todos</option></select></div>
+        </div>
+        <div class="op-filtros" id="opFiltros"></div>
+        <div id="opLista"><div class="ayuda">Cargando…</div></div>
+        <div class="modal-footer">
+            <button class="btn-cancelar" onclick="cargarOpiniones()">🔄 Actualizar</button>
+            <button class="btn-cancelar" onclick="cerrarOpiniones()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 <!-- V11: Pruebas y registros (altas automáticas desde planes.html) -->
 <div class="modal-overlay" id="modalRegistros">
     <div class="modal" style="max-width:760px;">
@@ -993,31 +1032,21 @@ details.ctr-com[open] > summary { border-bottom:1px solid #EEF2F6; }
 <div class="toast" id="toast"></div>
 
 <script>
-// V43.52 · Admin V29: banderita del país según la dirección de la página (vaopos.vercel.app = Chile; vaopos-ar… = Argentina). Dibujada en SVG: en Windows, Chrome no dibuja las banderas emoji.
-function _paisVAO() { var h = String(location.hostname || ''); return h === 'vaopos.vercel.app' ? 'CL' : (h.indexOf('vaopos-ar') === 0 ? 'AR' : ''); }
-function _banderaVAO(alto, sinMargen) {
-    var p = _paisVAO(), a = alto || 12, w = Math.round(a * 1.5), s = 'width:' + w + 'px;height:' + a + 'px;vertical-align:-2px;margin-right:' + (sinMargen ? 0 : 5) + 'px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.25);';
-    if (p === 'CL') return '<svg role="img" aria-label="Chile" viewBox="0 0 30 20" style="' + s + '"><title>Chile</title><rect width="30" height="20" fill="#D52B1E"/><rect width="30" height="10" fill="#fff"/><rect width="10" height="10" fill="#0039A6"/><polygon points="5,2 5.9,4.8 8.8,4.8 6.4,6.5 7.3,9.2 5,7.5 2.7,9.2 3.6,6.5 1.2,4.8 4.1,4.8" fill="#fff"/></svg>';
-    if (p === 'AR') return '<svg role="img" aria-label="Argentina" viewBox="0 0 30 20" style="' + s + '"><title>Argentina</title><rect width="30" height="20" fill="#74ACDF"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2.3" fill="#F6B40E"/></svg>';
-    return '';
-}
-const APP_VERSION = 29;   // V29: banderita 🇨🇱/🇦🇷 en la etiqueta de abajo según la dirección · V28: duplicado con botón «Sí, es otra transferencia distinta» (Renovar y Vigencia), referencias repetidas una vez «(3 pagos)», aviso verde que queda escrito al registrar un pago, Historial y vista previa con el nombre del plan (P3 PRO) // V27: «🔄 Renovar» también en la barra del celular (Seleccionado: …) // V25: formularios de pago blindados — titular solo números, n.º de Mercado Pago solo dígitos, ayuda para no confundir «Mercado Pago» con «Transferencia desde Mercado Pago» · V24 (servidor v045.9): 🔄 Renovar — elegís 1, 2, 3, 6 o 12 meses, el servidor calcula el importe y el nuevo vencimiento, y con la referencia se confirma (lo demás sigue en 💳 Vigencia y pagos) · V23 (servidor v045.4): la etiqueta de abajo distingue App · Servidor (getInfo) · Entorno; tocándola se ve el historial de versiones del servidor · V22.5: el Cotizador figura en P2 Gestión (no como complemento) · V22.4: cobro «como en un cuaderno» (casilla «aceptó los Términos de uso» si no hay contrato) y 🏠 comercio interno de VAO en Vigencia y pagos · V22.3: «Complemento opcional» (antes «Complemento P3»); el candado de pagos explica qué falta en STAGING y en Producción · V22.2 (v044.2): complementos «para P1, P2, P3 PRO» (antes los códigos internos); fila «Precio mensual» (dice «/ lanzamiento» solo si hay alguno); la cotización la carga cada comercio (VAO también puede, como soporte) · V22 (v044.1): planes P1 · P2 · P3 PRO integrados (activación en un paso con vista previa, cambio de plan a P3 con el pago), complementos opcionales aparte, botonera de cada comercio desde la matriz central y aviso de combinaciones contradictorias · V21 (v043): 📋 Planes y contrataciones — P1/P2/P3, prestaciones por comercio (catálogo/contratado/habilitado/suspendido), complementos, precios, historial y elecciones pendientes // V20: 💱 Cobro por comercio (cobro avanzado prender/apagar, cotizaciones USD/CLP, cobros sin terminar) y uso de la planilla
+const APP_VERSION = 29;   // V29: 💬 Opiniones de los comercios con globito cada minuto, aviso flotante, estados y respuesta (servidor v046.0) // V28: duplicado con botón «Sí, es otra transferencia distinta» (Renovar y Vigencia), referencias repetidas una vez «(3 pagos)», aviso verde que queda escrito al registrar un pago, Historial y vista previa con el nombre del plan (P3 PRO) // V27: «🔄 Renovar» también en la barra del celular (Seleccionado: …) // V25: formularios de pago blindados — titular solo números, n.º de Mercado Pago solo dígitos, ayuda para no confundir «Mercado Pago» con «Transferencia desde Mercado Pago» · V24 (servidor v045.9): 🔄 Renovar — elegís 1, 2, 3, 6 o 12 meses, el servidor calcula el importe y el nuevo vencimiento, y con la referencia se confirma (lo demás sigue en 💳 Vigencia y pagos) · V23 (servidor v045.4): la etiqueta de abajo distingue App · Servidor (getInfo) · Entorno; tocándola se ve el historial de versiones del servidor · V22.5: el Cotizador figura en P2 Gestión (no como complemento) · V22.4: cobro «como en un cuaderno» (casilla «aceptó los Términos de uso» si no hay contrato) y 🏠 comercio interno de VAO en Vigencia y pagos · V22.3: «Complemento opcional» (antes «Complemento P3»); el candado de pagos explica qué falta en STAGING y en Producción · V22.2 (v044.2): complementos «para P1, P2, P3 PRO» (antes los códigos internos); fila «Precio mensual» (dice «/ lanzamiento» solo si hay alguno); la cotización la carga cada comercio (VAO también puede, como soporte) · V22 (v044.1): planes P1 · P2 · P3 PRO integrados (activación en un paso con vista previa, cambio de plan a P3 con el pago), complementos opcionales aparte, botonera de cada comercio desde la matriz central y aviso de combinaciones contradictorias · V21 (v043): 📋 Planes y contrataciones — P1/P2/P3, prestaciones por comercio (catálogo/contratado/habilitado/suspendido), complementos, precios, historial y elecciones pendientes // V20: 💱 Cobro por comercio (cobro avanzado prender/apagar, cotizaciones USD/CLP, cobros sin terminar) y uso de la planilla
 document.addEventListener('DOMContentLoaded', function(){
     var tag = document.createElement('span');
     tag.id = 'version-tag';
     tag.style.cssText = 'position:fixed;right:10px;bottom:8px;font-size:11px;color:#8a95a1;z-index:9999;';
-    var tagTxt = document.createElement('span');   // V29: la bandera va aparte; el texto se actualiza solo
-    tag.innerHTML = _banderaVAO(10); tag.appendChild(tagTxt);
-    tagTxt.textContent = 'App v' + APP_VERSION + ' · Servidor …';
+    tag.textContent = 'App v' + APP_VERSION + ' · Servidor …';
     document.body.appendChild(tag);
     // V23: versión REAL del servidor y entorno (getInfo responde sin sesión y no devuelve datos privados)
     fetch(API_URL + '?action=getInfo', { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (i) {
         var ent = String(i.entorno || (i.sistema && i.sistema.entorno) || '?').toUpperCase();
-        tagTxt.textContent = 'App v' + APP_VERSION + ' · Servidor ' + (i.version || '?') + ' · ' + ent + (i.planillaActiva && !/correcta/i.test(i.planillaActiva) ? ' ⚠️ ' + i.planillaActiva : '');
+        tag.textContent = 'App v' + APP_VERSION + ' · Servidor ' + (i.version || '?') + ' · ' + ent + (i.planillaActiva && !/correcta/i.test(i.planillaActiva) ? ' ⚠️ ' + i.planillaActiva : '');
         tag.style.color = ent === 'STAGING' ? '#e65100' : '#8a95a1';
         tag.style.cursor = 'pointer'; tag.title = 'Ver historial de versiones del servidor';
         tag.onclick = function () { alert((i.historial || []).map(function (h) { return h.version + ' · ' + h.fecha + ' · ' + h.entorno + '\n' + h.descripcion; }).join('\n\n') || 'Sin historial'); };
-    }).catch(function () { tagTxt.textContent = 'App v' + APP_VERSION + ' · Servidor sin respuesta'; });
+    }).catch(function () { tag.textContent = 'App v' + APP_VERSION + ' · Servidor sin respuesta'; });
 });
 const API_URL = 'https://script.google.com/macros/s/AKfycbzlfo16ivECUH-qUkjIllj636bK9uE9GuFBxaddKK3KQT06xnrv1BObwlvFQ_3WvY_f/exec';
 const LS_TOKEN = 'vao_admin_token';
@@ -1145,6 +1174,7 @@ function mostrarAdmin() {
     document.getElementById('panelAdmin').style.display = 'block';
     cargarClientes();
     actualizarBadgeRegistros(); setInterval(actualizarBadgeRegistros, 60000); // V11: indicador visible y actualizado
+    actualizarBadgeOpiniones(); setInterval(actualizarBadgeOpiniones, 60000);   // V29: 💬 opiniones nuevas
     cargarPlanes().then(reabrirAltaPendiente);
 }
 
@@ -2922,6 +2952,107 @@ async function accionPlanes(accion, btn) {
         await cargarPlanes(); renderPlanes(); abrirCheckpointGeneral();
     } catch (e) { toast('Error de conexión', 'rojo'); }
 }
+
+// ══ V29: 💬 OPINIONES DE LOS COMERCIOS ══════════════════════════════════
+// El globito cuenta solo las NUEVAS. Al abrir una opinión pasa a VISTA (leída, NO resuelta). RESUELTA exige versión; DESCARTADA, motivo.
+// Responder NO cambia el estado. Cada cambio viaja con la firma de lo que se vio: si alguien la cambió antes, pide actualizar.
+let _op = null, _opFiltro = 'NUEVAS', _opUltimaNueva = null, _opBadgeIni = false, _opFijas = new Set();   // _opFijas: las que tocaste quedan a la vista aunque ya no sean del filtro (no perdés el contexto)
+const OP_TIPO = { PROBLEMA: '⚠️', SUGERENCIA: '💡', MEJORA: '✨' }, OP_EST = { NUEVA: 'Nueva', VISTA: 'Vista', EN_CURSO: 'En curso', RESUELTA: 'Resuelta', DESCARTADA: 'Descartada' };
+async function actualizarBadgeOpiniones() {
+    let r = null; try { r = await _adminApi('opinionesPanel', { soloConteo: true }); } catch (e) { return; }
+    if (!r || !r.success) return;   // servidor sin v046.0: el botón queda sin globito
+    const b = document.getElementById('badgeOpiniones');
+    b.textContent = r.nuevas; b.style.display = r.nuevas ? 'inline-block' : 'none';
+    b.title = r.nuevas + ' nueva(s) · ' + r.problemasNuevos + ' problema(s) · ' + r.pendientes + ' pendiente(s)';
+    const ult = r.ultima ? r.ultima.id : null;
+    if (_opBadgeIni && ult && ult !== _opUltimaNueva) _opAvisoFlotante(r.ultima, r.nuevas);   // la primera lectura no avisa (eran de antes)
+    _opUltimaNueva = ult; _opBadgeIni = true;
+}
+function _opAvisoFlotante(o, n) {
+    let d = document.getElementById('opAvisoFlotante'); if (d) d.remove();
+    d = document.createElement('div'); d.id = 'opAvisoFlotante'; d.setAttribute('role', 'status');
+    d.textContent = '💬 Nueva opinión de ' + o.prefijo + ': ' + (OP_TIPO[o.tipo] || '') + ' ' + ({ PROBLEMA: 'Problema', SUGERENCIA: 'Sugerencia', MEJORA: 'Mejora' }[o.tipo] || '') + (n > 1 ? ' (' + n + ' nuevas)' : '') + ' · Tocá para verla';
+    d.onclick = () => { d.remove(); abrirOpiniones(); };
+    document.body.appendChild(d); setTimeout(() => { if (d.parentNode) d.remove(); }, 9000);
+}
+function abrirOpiniones() {
+    document.getElementById('modalOpiniones').classList.add('visible');
+    const op = document.getElementById('opOperador'); try { if (!op.value) op.value = localStorage.getItem('vao_admin_operador') || ''; } catch (e) {}
+    cargarOpiniones();
+}
+function cerrarOpiniones() { document.getElementById('modalOpiniones').classList.remove('visible'); actualizarBadgeOpiniones(); }
+async function cargarOpiniones() {
+    const box = document.getElementById('opLista'); box.innerHTML = '<div class="ayuda">Cargando…</div>';
+    let r = null; try { r = await _adminApi('opinionesPanel', {}); } catch (e) { r = null; }
+    if (!r) { box.innerHTML = '<div class="ayuda" style="color:var(--rojo);">📡 Sin conexión. Tocá Actualizar.</div>'; return; }
+    if (r.error || !r.success) { box.innerHTML = '<div class="ayuda" style="color:var(--rojo);">' + _esc(/no reconocida/i.test(r.error || '') ? 'El servidor instalado todavía no tiene Opiniones (hace falta Code.gs v046.0).' : (r.error || 'Error')) + '</div>'; return; }
+    _op = r;
+    const sel = document.getElementById('opComercio'), act = sel.value, pref = [...new Set(r.opiniones.map(o => o.prefijo))].sort();
+    sel.innerHTML = '<option value="">Todos</option>' + pref.map(p => '<option value="' + _esc(p) + '">' + _esc(p) + '</option>').join(''); sel.value = pref.indexOf(act) !== -1 ? act : '';
+    const b = document.getElementById('badgeOpiniones'); b.textContent = r.nuevas; b.style.display = r.nuevas ? 'inline-block' : 'none';
+    pintarOpiniones();
+}
+const OP_FILTROS = [['NUEVAS', 'Nuevas', o => o.estado === 'NUEVA'], ['PENDIENTES', 'Pendientes', o => o.estado === 'VISTA' || o.estado === 'EN_CURSO'], ['PROBLEMA', '⚠️ Problemas', o => o.tipo === 'PROBLEMA'],
+    ['SUGERENCIA', '💡 Sugerencias', o => o.tipo === 'SUGERENCIA'], ['MEJORA', '✨ Mejoras', o => o.tipo === 'MEJORA'], ['RESUELTAS', 'Resueltas', o => o.estado === 'RESUELTA'], ['TODAS', 'Todas', () => true]];
+function pintarOpiniones() {
+    if (!_op) return;
+    const pref = document.getElementById('opComercio').value, base = _op.opiniones.filter(o => !pref || o.prefijo === pref);
+    const nuevas = _op.opiniones.filter(o => o.estado === 'NUEVA').length, pend = _op.opiniones.filter(o => o.estado === 'VISTA' || o.estado === 'EN_CURSO').length;   // se recalcula con cada cambio
+    document.getElementById('opResumen').innerHTML = '<b>' + nuevas + '</b> nueva(s) · <b>' + pend + '</b> pendiente(s) (vistas o en curso) · Correo de aviso: ' +
+        (_op.correo === 'NO' ? 'apagado' : _op.correo === 'TODAS' ? 'todas las opiniones' : 'solo problemas') + ', como máximo 1 por hora' + (_op.hayCorreo ? '' : ' <span style="color:#E65100;">(falta CORREO_AVISOS_VAO: no se manda ninguno)</span>') + '.';
+    document.getElementById('opFiltros').innerHTML = OP_FILTROS.map(f => '<button class="' + (_opFiltro === f[0] ? 'activo' : '') + '" onclick="_opFiltro=\'' + f[0] + '\';_opFijas.clear();pintarOpiniones()">' + f[1] + ' (' + base.filter(f[2]).length + ')</button>').join('');
+    const fil = (OP_FILTROS.find(f => f[0] === _opFiltro) || OP_FILTROS[6])[2], l = base.filter(o => fil(o) || _opFijas.has(o.id));
+    document.getElementById('opLista').innerHTML = l.length ? l.map(_opTarjeta).join('') : '<div class="ayuda">No hay opiniones en esta vista.</div>';
+    document.querySelectorAll('#opLista details.op-card').forEach(d => d.addEventListener('toggle', () => { if (d.open) _opAbierta(d.dataset.id); }));
+}
+function _opTarjeta(o) {
+    const id = _esc(o.id), cerrada = o.estado === 'RESUELTA' || o.estado === 'DESCARTADA';
+    return '<details class="op-card" data-id="' + id + '"><summary><span class="op-tipo">' + (OP_TIPO[o.tipo] || '') + '</span>' +
+        '<span class="op-txt">' + _esc(o.texto.length > 110 ? o.texto.slice(0, 110) + '…' : o.texto) + '<small>' + _esc(o.prefijo) + ' · ' + _esc(o.comercio) + ' · ' + _esc(o.fecha) + '</small></span>' +
+        '<span class="op-est ' + _esc(o.estado) + '">' + (OP_EST[o.estado] || _esc(o.estado)) + (o.respuesta ? ' · 💬' : '') + '</span></summary>' +
+        '<div class="op-cuerpo"><div class="op-texto">' + _esc(o.texto) + '</div>' +
+        '<div class="ayuda">Dónde: <b>' + _esc(o.pagina) + (o.seccion ? ' › ' + _esc(o.seccion) : '') + '</b> · página v' + _esc(o.versionPagina || '?') + ' · servidor ' + _esc(o.versionServidor || '?') + ' · ' + _esc(o.dispositivo || '') + '</div>' +
+        (o.estado !== 'NUEVA' && o.operadorEstado ? '<div class="ayuda">Estado puesto por ' + _esc(o.operadorEstado) + ' el ' + _esc(o.fechaEstado) + (o.versionResuelta ? ' · resuelta en ' + _esc(o.versionResuelta) : '') + (o.motivo ? ' · motivo: ' + _esc(o.motivo) : '') + '</div>' : '') +
+        (o.respuesta ? '<div class="ayuda" style="background:#E8F5E9;border-radius:8px;padding:6px 8px;margin-top:6px;color:#1B5E20;">💬 Respuesta (' + _esc(o.fechaRespuesta) + '): ' + _esc(o.respuesta) + '</div>' : '') +
+        '<div class="op-acc">' +
+            (!cerrada && o.estado !== 'EN_CURSO' ? '<button class="btn-accion" style="background:#EDE7F6;color:#4527A0;" onclick="_opCambiar(\'' + id + '\',\'EN_CURSO\')">🛠️ En curso</button>' : '') +
+            (!cerrada ? '<button class="btn-accion" style="background:#E8F5E9;color:#1B5E20;" onclick="_opCambiar(\'' + id + '\',\'RESUELTA\')">✅ Resuelta</button><button class="btn-accion" style="background:#ECEFF1;color:#455A64;" onclick="_opCambiar(\'' + id + '\',\'DESCARTADA\')">🚫 Descartar</button>' : '') +
+            (cerrada ? '<button class="btn-accion" style="background:#FFF3E0;color:#E65100;" onclick="_opCambiar(\'' + id + '\',\'EN_CURSO\')">↩️ Reabrir</button>' : '') +
+        '</div>' +
+        '<input class="op-campo" id="opVer_' + id + '" maxlength="30" placeholder="Versión donde quedó resuelta (para «Resuelta»), ej.: recetas v2">' +
+        '<input class="op-campo" id="opMot_' + id + '" maxlength="200" placeholder="Motivo (para «Descartar» o «Reabrir»): lo ve el comercio">' +
+        '<textarea class="op-campo" id="opResp_' + id + '" maxlength="300" rows="2" placeholder="Respuesta para el comercio (no cambia el estado)"></textarea>' +
+        '<div class="op-acc"><button class="btn-accion" style="background:#1565C0;color:#fff;" onclick="_opResponder(\'' + id + '\')">💬 Enviar respuesta</button></div>' +
+        '<div id="opMsg_' + id + '" style="margin-top:6px;"></div></div></details>';
+}
+async function _opAbierta(id) {   // abrirla = VISTA (solo si era NUEVA)
+    _opFijas.add(id);
+    const o = _op && _op.opiniones.find(x => x.id === id); if (!o || o.estado !== 'NUEVA') return;
+    let r = null; try { r = await _adminApi('marcarOpinion', { id: id, estado: 'VISTA', auto: true }); } catch (e) { return; }
+    if (r && r.success && r.opinion) { Object.assign(o, r.opinion); _op.nuevas = Math.max(0, _op.nuevas - 1); const b = document.getElementById('badgeOpiniones'); b.textContent = _op.nuevas; b.style.display = _op.nuevas ? 'inline-block' : 'none';
+        const est = document.querySelector('details.op-card[data-id="' + CSS.escape(id) + '"] .op-est'); if (est) { est.className = 'op-est VISTA'; est.textContent = OP_EST.VISTA + (o.respuesta ? ' · 💬' : ''); } }
+}
+function _opOperador() { const v = document.getElementById('opOperador').value.trim(); if (v) { try { localStorage.setItem('vao_admin_operador', v); } catch (e) {} } return v; }
+async function _opEnviar(id, datos, msgOk) {
+    const o = _op.opiniones.find(x => x.id === id), box = document.getElementById('opMsg_' + id);
+    const operador = _opOperador(); if (operador.length < 2) { box.innerHTML = '<div class="ayuda" style="color:var(--rojo);">Escribí arriba quién hace el cambio (operador). No se cambió nada.</div>'; document.getElementById('opOperador').focus(); return; }
+    box.innerHTML = '<div class="ayuda">Guardando…</div>';
+    let r = null; try { r = await _adminApi('marcarOpinion', Object.assign({ id: id, firma: o.firma, operador: operador }, datos)); } catch (e) { r = null; }
+    if (!r) { box.innerHTML = '<div class="ayuda" style="color:var(--rojo);">📡 Sin conexión: no se sabe si se guardó. Tocá 🔄 Actualizar antes de repetir.</div>'; return; }
+    if (!r.success) { box.innerHTML = '<div class="ayuda" style="color:var(--rojo);">❌ ' + _esc(r.error) + '</div>' + (r.cambio ? '<button class="btn-accion" onclick="cargarOpiniones()">🔄 Actualizar</button>' : ''); return; }
+    Object.assign(o, r.opinion); toast('✅ ' + (r.mensaje || msgOk), 'verde');
+    const abierta = id; pintarOpiniones();
+    const d = document.querySelector('details.op-card[data-id="' + CSS.escape(abierta) + '"]');
+    if (d) { d.open = true; document.getElementById('opMsg_' + id).innerHTML = '<div class="ayuda" style="color:#2E7D32;">✅ ' + _esc(r.mensaje || msgOk) + '</div>'; }
+    else document.getElementById('opLista').insertAdjacentHTML('afterbegin', '<div class="ayuda" style="color:#2E7D32;margin-bottom:6px;">✅ ' + _esc(r.mensaje || msgOk) + ' (pasó a otro filtro)</div>');
+}
+function _opCambiar(id, estado) {
+    const datos = { estado: estado };
+    if (estado === 'RESUELTA') datos.versionResuelta = document.getElementById('opVer_' + id).value.trim();
+    if (estado === 'DESCARTADA' || estado === 'EN_CURSO') datos.motivo = document.getElementById('opMot_' + id).value.trim();
+    _opEnviar(id, datos, 'Estado actualizado');
+}
+function _opResponder(id) { _opEnviar(id, { respuesta: document.getElementById('opResp_' + id).value }, 'Respuesta enviada'); }
 
 // ══ V11: PRUEBAS Y REGISTROS (altas automáticas de planes.html) ══════════
 let _rg = null, _rgFiltro = 'TODAS';

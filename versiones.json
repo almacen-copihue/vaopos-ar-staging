@@ -2,7 +2,7 @@
   "_nota": "Versión publicada de cada página de VAO POS. La lee vao-version.js para avisar «Hay una versión nueva». Se actualiza en cada entrega, junto con la página.",
   "actualizado": "2026-11-27",
   "paginas": {
-    "pos": "43.52",
+    "pos": "43.51",
     "admin": "29",
     "index": "11",
     "fiados": "8",
@@ -15,6 +15,7 @@
     "clientes": "1",
     "compras": "1",
     "cotizador": "1",
+    "recetas": "1",
     "deudas": "1",
     "egresos": "1",
     "finanzas": "1",

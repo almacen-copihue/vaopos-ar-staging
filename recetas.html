@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D47A1">
+<link rel="icon" type="image/png" href="favicon-48.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="vao-comun.css">
+<title>[STAGING] Recetas y costos · VAO POS</title>
+<style>
+/* recetas.html v1 (servidor v046.0) — complemento opcional 🧁 Recetas y costos (extra_recetas).
+   Cuánto cuesta cada receta con el último precio de compra. NO descuenta stock, NO toca ventas ni caja.
+   Todos los costos los calcula el servidor: la pantalla solo muestra lo que recibe. */
+.ayuda { color: var(--suave); font-size: .86rem; margin: 0 0 10px; }
+.donde { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin: 0 0 8px; }
+.donde h2 { margin: 0; }
+.tarjeta-receta { display: block; width: 100%; text-align: left; border: 0; cursor: pointer; font: inherit; color: var(--texto); }
+.tarjeta-receta .fila1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.tarjeta-receta .nom { font-weight: 800; font-size: 1.02rem; overflow-wrap: anywhere; }
+.tarjeta-receta .cu { font-weight: 800; font-size: 1.1rem; white-space: nowrap; color: var(--grupo-tinta); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip-ok { background: #E8F5E9; color: #1B5E20; } .chip-mal { background: #FDECEA; color: var(--rojo); }
+@media (prefers-color-scheme: dark) { .chip-ok { background: #16301F; color: #A5D6A7; } .chip-mal { background: #3A1616; color: #EF9A9A; } }
+/* editor */
+.barra-ed { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 8px; }
+.ren { display: grid; grid-template-columns: 78px 1fr auto 34px; grid-template-areas: "cant ing ing quitar" "unis unis costo costo"; gap: 4px 6px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--borde); }
+.ren.mal { background: #FDECEA33; box-shadow: inset 3px 0 0 var(--rojo); padding-left: 6px; }
+.ren .cant { grid-area: cant; } .ren .ingw { grid-area: ing; position: relative; min-width: 0; } .ren .rcosto { grid-area: costo; font-weight: 700; white-space: nowrap; font-size: .9rem; text-align: right; }
+.ren .quitar { grid-area: quitar; } .ren .unis { grid-area: unis; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.ren input { width: 100%; min-height: 42px; border: 2px solid var(--borde); border-radius: 10px; padding: 8px; font: inherit; background: var(--papel); color: var(--texto); }
+.ren input:focus { border-color: var(--grupo); outline: none; }
+.ren .cant { text-align: center; }
+.uni { border: 1.5px solid var(--borde); background: var(--papel); color: var(--texto); border-radius: 999px; padding: 4px 10px; font: 700 .8rem inherit; cursor: pointer; min-height: 30px; }
+.uni.activo { background: var(--grupo); border-color: var(--grupo); color: #fff; }
+.fac { display: inline-flex; align-items: center; gap: 4px; font-size: .8rem; color: var(--suave); margin-left: 6px; }
+.fac input { width: 60px; min-height: 30px; padding: 4px; text-align: center; }
+.sug { position: absolute; left: 0; right: 0; top: 100%; z-index: 15; background: var(--papel); border: 1px solid var(--borde); border-radius: 10px; box-shadow: var(--sombra); max-height: 260px; overflow-y: auto; }
+.sug button { display: flex; justify-content: space-between; gap: 8px; width: 100%; border: 0; background: none; color: var(--texto); padding: 10px; font: inherit; text-align: left; cursor: pointer; }
+.sug button.marcado, .sug button:hover { background: var(--grupo-fondo); }
+.sug small { color: var(--suave); }
+.sinprecio { border: 0; border-radius: 999px; padding: 3px 9px; font: 800 .74rem inherit; background: var(--amarillo); color: var(--naranja); cursor: pointer; white-space: nowrap; }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.seg button { border: 2px solid var(--borde); background: var(--papel); color: var(--texto); border-radius: 12px; padding: 8px 12px; font: 700 .88rem inherit; cursor: pointer; }
+.seg button.activo { border-color: var(--grupo); background: var(--grupo-fondo); color: var(--grupo-tinta); }
+.resultado { border: 2px solid var(--grupo); border-radius: var(--radio); padding: 12px; background: var(--grupo-fondo); }
+.resultado .grande { font-size: 1.6rem; font-weight: 900; color: var(--grupo-tinta); }
+.resultado .linea { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-size: .92rem; }
+.resultado .linea.tot { border-top: 2px dashed var(--borde); margin-top: 4px; padding-top: 6px; font-weight: 800; }
+.margen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.margen > div { background: var(--papel); border-radius: 10px; padding: 8px; }
+.margen small { display: block; color: var(--suave); font-weight: 700; font-size: .74rem; }
+.guardar-fijo { position: sticky; bottom: 0; z-index: 12; background: var(--fondo); padding: 8px 0 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.guardar-fijo .vao-btn.primario { flex: 1 1 200px; }
+/* compra */
+.tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 8px; margin-bottom: 8px; }
+.tarjetas button { border: 2px solid var(--borde); background: var(--papel); color: var(--texto); border-radius: 12px; padding: 10px 6px; font: 700 .9rem inherit; cursor: pointer; min-height: 54px; }
+.tarjetas button small { display: block; font-weight: 600; color: var(--suave); font-size: .74rem; }
+.tarjetas button.activo { border-color: var(--grupo); background: var(--grupo-fondo); color: var(--grupo-tinta); }
+.pista { font-weight: 800; color: var(--grupo-tinta); min-height: 1.4em; }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; margin: 6px 0 10px; }
+.chk input { width: 22px; height: 22px; accent-color: var(--grupo); flex: 0 0 auto; }
+/* opiniones */
+.fab-opinar { position: fixed; right: 12px; bottom: 14px; transition: bottom .2s; z-index: 25; border: 0; border-radius: 999px; padding: 10px 14px; font: 800 .9rem inherit; background: #263238; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.25); cursor: pointer; }
+.tipos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.tipos button { border: 2px solid var(--borde); background: var(--papel); color: var(--texto); border-radius: 12px; padding: 10px 4px; font: 700 .86rem inherit; cursor: pointer; }
+.tipos button.activo { border-color: var(--grupo); background: var(--grupo-fondo); color: var(--grupo-tinta); }
+.mis-opi li { padding: 8px 0; border-bottom: 1px solid var(--borde); font-size: .88rem; }
+.respuesta { background: var(--grupo-fondo); border-radius: 8px; padding: 6px 8px; margin-top: 4px; }
+.aviso-respuesta { display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer; }
+body.editando .fab-opinar { bottom: 78px; }
+.modal-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.modal-cab h2 { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .ren { grid-template-columns: 64px 1fr auto 32px; } .margen { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header id="vaoCabecera"></header>
+<div id="vaoBloqueo" class="oculto"></div>
+<main class="vao oculto" id="vaoContenido">
+  <div id="vaoAviso" class="oculto"></div>
+  <div id="avisoRespuesta" class="vao-msg info aviso-respuesta oculto" role="button" tabindex="0"></div>
+  <nav class="vao-pestanas" id="tabs" role="tablist">
+    <button data-tab="recetas" class="activo">📖 Recetas</button>
+    <button data-tab="compra">🛒 Cargar compra</button>
+    <button data-tab="ingredientes">🥚 Ingredientes</button>
+  </nav>
+
+  <!-- 📖 RECETAS: lista y editor (el editor se abre en la misma pantalla: no se pierde el contexto) -->
+  <section data-panel="recetas">
+    <div id="vistaLista">
+      <div class="vao-tarjeta">
+        <div class="donde"><h2>📖 Mis recetas</h2></div>
+        <p class="ayuda">Cuánto te cuesta cada receta con el último precio que pagaste. Tocá una receta para verla o cambiarla.</p>
+        <div id="msgLista" class="oculto"></div>
+        <div class="vao-fila vao-escribe"><button class="vao-btn primario" id="btnNueva">＋ Nueva receta</button></div>
+      </div>
+      <div id="bienvenida" class="oculto"></div>
+      <div id="listaRecetas"></div>
+    </div>
+
+    <div id="vistaEditor" class="oculto">
+      <div class="barra-ed">
+        <button class="vao-btn chico" id="btnVolverLista">← Mis recetas</button>
+        <div class="vao-fila vao-escribe" style="flex:0 0 auto;">
+          <button class="vao-btn chico" id="btnDuplicar" title="Para una variante: copiá y cambiá solo lo distinto">📄 Duplicar</button>
+          <button class="vao-btn chico peligro" id="btnArchivar">🗄️ Archivar</button>
+        </div>
+      </div>
+      <div id="edMsg" class="oculto"></div>
+      <div class="vao-tarjeta">
+        <div class="vao-campo"><label for="edNombre">Nombre de la receta</label><input id="edNombre" maxlength="60" autocomplete="off" placeholder="Ej.: Cookies NY" enterkeyhint="next"></div>
+        <h2 style="margin-top:4px;">Ingredientes</h2>
+        <p class="ayuda" id="edAyudaIng">Escribí como en tu cuaderno: <b>cantidad</b>, <b>unidad</b> e <b>ingrediente</b>. Con «Siguiente» o Enter pasás al próximo. Si el ingrediente no existe, lo creás ahí mismo.</p>
+        <div id="renglones"></div>
+        <button class="vao-btn chico vao-escribe" id="btnRenglon" style="margin-top:8px;">＋ Otro ingrediente</button>
+      </div>
+
+      <div class="vao-tarjeta">
+        <h2>¿Cuánto rinde?</h2>
+        <div class="seg" id="segRinde" role="radiogroup" aria-label="Cómo rinde">
+          <button data-r="PORCIONES" role="radio">Porciones</button><button data-r="PLACA" role="radio">Placa (cortes)</button><button data-r="PESO" role="radio">Por peso</button>
+        </div>
+        <div id="rindePORCIONES" class="vao-fila"><div class="vao-campo" style="flex:0 1 180px;"><label for="edPorciones">Porciones o unidades que salen</label><input id="edPorciones" inputmode="numeric" placeholder="Ej.: 7"></div></div>
+        <div id="rindePLACA" class="vao-fila oculto">
+          <div class="vao-campo" style="flex:0 1 110px;"><label for="edFilas">Cortes a lo largo</label><input id="edFilas" inputmode="numeric" placeholder="10"></div>
+          <div class="vao-campo" style="flex:0 1 110px;"><label for="edCols">Cortes a lo ancho</label><input id="edCols" inputmode="numeric" placeholder="10"></div>
+          <div class="vao-campo" style="flex:1 1 120px;"><label>Salen</label><div id="edPlacaTotal" style="padding:10px 0;font-weight:800;">—</div></div>
+        </div>
+        <div id="rindePESO" class="vao-fila oculto">
+          <div class="vao-campo" style="flex:0 1 170px;"><label for="edGramos">Cada unidad pesa (g)</label><input id="edGramos" inputmode="decimal" placeholder="Ej.: 110"></div>
+          <div class="vao-campo" style="flex:1 1 200px;"><label for="edMasa">La masa pesó (g) · opcional</label><input id="edMasa" inputmode="decimal" placeholder="Si no la pesaste, VAO la calcula"></div>
+        </div>
+      </div>
+
+      <div class="vao-tarjeta">
+        <h2>Costos adicionales (por tanda)</h2>
+        <div class="vao-fila">
+          <div class="vao-campo"><label for="edEmpaque">Empaque ($)</label><input id="edEmpaque" inputmode="decimal" placeholder="Cajas, bolsas, moños"></div>
+          <div class="vao-campo"><label for="edMano">Mano de obra ($)</label><input id="edMano" inputmode="decimal" placeholder="Lo que vale tu tiempo"></div>
+        </div>
+        <div class="vao-fila">
+          <div class="vao-campo"><label for="edEnergia">Energía ($)</label><input id="edEnergia" inputmode="decimal" placeholder="Horno, batidora, luz, gas"></div>
+          <div class="vao-campo"><label for="edOtros">Otros ($)</label><input id="edOtros" inputmode="decimal" placeholder="Cualquier gasto extra"></div>
+          <div class="vao-campo" style="flex:0 1 120px;"><label for="edMerma">Merma (%)</label><input id="edMerma" inputmode="decimal" placeholder="Ej.: 5"></div>
+        </div>
+        <p class="ayuda" style="margin:0;">La merma es lo que se desperdicia: se suma sobre el costo de los ingredientes.</p>
+      </div>
+
+      <div class="vao-tarjeta">
+        <h2>Tu precio de venta (por unidad o porción)</h2>
+        <div class="vao-fila">
+          <div class="vao-campo"><label for="edPrecioCom">Para comercios ($)</label><input id="edPrecioCom" inputmode="decimal" placeholder="Opcional"></div>
+          <div class="vao-campo"><label for="edPrecioPub">Para público ($)</label><input id="edPrecioPub" inputmode="decimal" placeholder="Opcional"></div>
+        </div>
+      </div>
+
+      <div class="vao-tarjeta">
+        <h2>Resultado</h2>
+        <div id="edResultado"><p class="ayuda">Cargá ingredientes y el rinde: el costo aparece acá solo.</p></div>
+      </div>
+
+      <div class="vao-tarjeta">
+        <div class="vao-campo" style="margin:0;"><label for="edNotas">Preparación y notas (opcional)</label><textarea id="edNotas" rows="3" maxlength="1000" placeholder="Ej.: horno 170/180° 15 a 20 min"></textarea></div>
+      </div>
+
+      <div class="guardar-fijo vao-escribe">
+        <button class="vao-btn primario" id="btnGuardar">💾 Guardar receta</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🛒 CARGAR COMPRA -->
+  <section data-panel="compra" class="oculto">
+    <div class="vao-tarjeta">
+      <div class="donde"><h2>🛒 Cargar compra</h2></div>
+      <p class="ayuda">Lo que pagaste por un ingrediente. Desde ahora tus recetas usan este precio (salvo que marques que fue una oferta).</p>
+      <div id="compraTab"></div>
+    </div>
+  </section>
+
+  <!-- 🥚 INGREDIENTES -->
+  <section data-panel="ingredientes" class="oculto">
+    <div class="vao-tarjeta">
+      <div class="donde"><h2>🥚 Mis ingredientes</h2></div>
+      <p class="ayuda">El precio de cada uno es el de tu última compra. Tocá uno para cambiar su nombre, ver sus datos o cargar una compra.</p>
+      <div id="msgIng" class="oculto"></div>
+      <div class="vao-fila vao-escribe"><button class="vao-btn primario" id="btnNuevoIng">＋ Nuevo ingrediente</button></div>
+      <ul class="vao-lista" id="listaIng"></ul>
+    </div>
+  </section>
+</main>
+<button class="fab-opinar" id="btnOpinar" aria-label="Opinar: sugerencia, mejora o problema">💬 Opinar</button>
+<div class="staging-badge">STAGING</div>
+<script src="vao-comun.js"></script>
+<script>
+// recetas.html v1 — los costos los calcula SIEMPRE el servidor (recEstado / recGuardarReceta). Esta pantalla solo los muestra.
+'use strict';
+const $ = id => document.getElementById(id);
+const UNIDADES_DE = { g: ['g', 'kg', 'cda', 'cdta'], ml: ['ml', 'l', 'cda', 'cdta'], u: ['u'] };
+const TODAS_UNIDADES = ['g', 'kg', 'ml', 'l', 'u', 'cda', 'cdta'];
+const BASE_DE = { g: 'g', kg: 'g', ml: 'ml', l: 'ml', u: 'u', cda: 'g', cdta: 'g' };
+const NOMBRE_UNIDAD = { g: 'gramos', ml: 'mililitros', u: 'unidades' };
+let E = { insumos: [], recetas: [] }, INS = {}, TAB = 'recetas';
+let ED = null;          // receta que se está editando
+let PREV_SEQ = 0, PREV_T = null;
+
+// ── utilidades ──
+const pesos = n => {   // $1.440 · $2.109,38 (si tiene centavos, siempre 2 decimales)
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const v = Math.round(Number(n) * 100) / 100, ent = Number.isInteger(v);
+  return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('es-AR', { minimumFractionDigits: ent ? 0 : 2, maximumFractionDigits: 2 });
+};
+const pct = p => String(p).replace('.', ',') + ' %';
+const fecha = t => { const m = /^(\d{4})-(\d\d)-(\d\d)(.*)$/.exec(String(t || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] + m[4] : String(t || ''); };
+// Números como se escriben acá: «0,5» y «0.5» = medio · «1.500» = mil quinientos · «1.500,5» = 1500,5. Vacío = null.
+function num(v) {
+  let t = String(v == null ? '' : v).trim().replace(/\s/g, '').replace(/^\$/, ''); if (t === '') return null;
+  if (t.indexOf(',') !== -1) t = t.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = Number(t); return isFinite(n) ? n : NaN;
+}
+const fmt = v => v === null || v === undefined || v === '' ? '' : String(v).replace('.', ',');
+const porQue = u => u === 'u' ? 'por unidad' : u === 'ml' ? 'por litro' : 'por kilo';
+const precioRef = i => i.costo === null || i.costo === undefined ? null : (i.unidad === 'u' ? i.costo : i.costo * 1000);
+function msg(el, texto, tipo) { VAO.msg(el, texto, tipo); if (texto) { const x = typeof el === 'string' ? $(el) : el; if (x) x.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } }
+function aplicarEstado(r) { E = r; INS = {}; (E.insumos || []).forEach(i => { INS[i.id] = i; }); pintarLista(); pintarIngredientes(); }
+function dispositivo() {
+  const ua = navigator.userAgent || '';
+  const so = /Android/i.test(ua) ? 'Android' : /iPhone|iPad/i.test(ua) ? 'iPhone/iPad' : /Windows/i.test(ua) ? 'Windows' : /Mac/i.test(ua) ? 'Mac' : 'Otro';
+  const nav = /SamsungBrowser/i.test(ua) ? 'Samsung' : /Edg\//i.test(ua) ? 'Edge' : /Chrome/i.test(ua) ? 'Chrome' : /Safari/i.test(ua) ? 'Safari' : /Firefox/i.test(ua) ? 'Firefox' : 'otro';
+  return so + ' · ' + nav + ' · ' + window.innerWidth + 'px';
+}
+function modal(titulo, html) {
+  const m = document.createElement('div'); m.className = 'vao-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', titulo);
+  m.innerHTML = '<div><div class="modal-cab"><h2>' + VAO.esc(titulo) + '</h2><button class="vao-btn chico" data-cerrar aria-label="Cerrar">✕</button></div>' + html + '</div>';
+  document.body.appendChild(m);
+  const cerrar = () => { m.remove(); };
+  m.addEventListener('click', e => { if (e.target === m) cerrar(); });
+  m.querySelector('[data-cerrar]').addEventListener('click', cerrar);
+  return { el: m, cerrar, q: s => m.querySelector(s) };
+}
+function confirmar(titulo, texto, siTexto, peligro) {
+  return new Promise(res => {
+    const m = modal(titulo, '<p>' + texto + '</p><div class="vao-fila"><button class="vao-btn ' + (peligro ? 'peligro' : 'primario') + '" data-si>' + VAO.esc(siTexto) + '</button><button class="vao-btn" data-no>No, volver</button></div>');
+    m.q('[data-si]').onclick = () => { m.cerrar(); res(true); };
+    m.q('[data-no]').onclick = () => { m.cerrar(); res(false); };
+    m.q('[data-cerrar]').addEventListener('click', () => res(false));
+  });
+}
+
+// ── carga ──
+async function cargar() {
+  try {
+    const r = await VAO.api('recEstado', {});
+    if (!r || !r.success) { msg('msgLista', (r && r.error) || 'No se pudieron cargar tus recetas.', 'error'); return false; }
+    aplicarEstado(r);
+    if (r.primeraVez) msg('msgLista', '✅ Listo: Recetas está preparado para tu comercio. Empezá por «＋ Nueva receta» (los ingredientes se crean mientras escribís).', 'ok');
+    return true;
+  } catch (e) { msg('msgLista', VAO.sinConexion, 'error'); return false; }
+}
+
+// ── 📖 lista de recetas ──
+function pintarLista() {
+  const box = $('listaRecetas'), bv = $('bienvenida');
+  if (!E.recetas.length) {
+    bv.className = 'vao-tarjeta'; bv.innerHTML = '<h2>👋 ¿Cómo empiezo?</h2><ol style="margin:0;padding-left:20px;line-height:1.6;">' +
+      '<li>Tocá <b>＋ Nueva receta</b> y escribí los ingredientes como en tu cuaderno.</li>' +
+      '<li>Cargá cuánto pagaste por cada ingrediente en <b>🛒 Cargar compra</b> (o desde la misma receta, donde diga «sin precio»).</li>' +
+      '<li>Listo: VAO calcula cuánto te cuesta cada unidad y tu ganancia.</li></ol>';
+    box.innerHTML = ''; return;
+  }
+  bv.className = 'oculto';
+  box.innerHTML = E.recetas.map((r, i) => {
+    const c = r.calculo, uni = r.tipoRinde === 'PORCIONES' ? 'porción' : 'unidad';
+    const mg = (t, m) => m ? '<span class="vao-chip ' + (m.ganancia >= 0 ? 'chip-ok' : 'chip-mal') + '">' + t + ' ' + pesos(m.precio) + ' · ' + (m.ganancia >= 0 ? 'ganás ' : 'perdés ') + pesos(Math.abs(m.ganancia)) + ' (' + pct(m.pct) + ')</span>' : '';
+    return '<button class="vao-tarjeta tarjeta-receta" data-i="' + i + '"><div class="fila1"><span class="nom">' + VAO.esc(r.nombre) + '</span>' +
+      '<span class="cu">' + (c.costoUnidad !== null ? pesos(c.costoUnidad) + ' <small style="font-weight:600;font-size:.74rem;color:var(--suave)">c/' + uni + '</small>' : '—') + '</span></div>' +
+      '<div class="chips">' + (c.unidades ? '<span class="vao-chip gris">rinde ' + c.unidades + ' · tanda ' + pesos(c.total) + '</span>' : '') +
+      (c.incompleto ? '<span class="vao-chip naranja">⚠️ faltan precios</span>' : '') + mg('comercio', c.comercio) + mg('público', c.publico) + '</div></button>';
+  }).join('');
+  box.querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => abrirEditor(E.recetas[+b.dataset.i])));
+}
+
+// ── ✏️ editor ──
+function recetaVacia() { return { id: '', version: 0, nombre: '', tipoRinde: 'PORCIONES', rinde: '', rindeDetalle: '', masaManual: '', empaque: '', manoObra: '', energia: '', otros: '', mermaPct: '', precioComercio: '', precioPublico: '', notas: '', items: [] }; }
+function abrirEditor(r, esCopia) {
+  const base = r ? JSON.parse(JSON.stringify(r)) : recetaVacia();
+  ED = { id: esCopia ? '' : base.id, version: esCopia ? 0 : base.version, opId: VAO.opId('REC'), dirty: !!esCopia, incierto: false, calculo: base.calculo || null,
+         items: (base.items || []).map(it => ({ insumoId: it.insumoId, cantidad: it.cantidad, unidad: it.unidad, factor: it.factor || 1, detalle: it.detalle || '', texto: INS[it.insumoId] ? INS[it.insumoId].nombre : '' })) };
+  if (!ED.items.length) ED.items.push(renglonVacio());
+  ED.items.push(renglonVacio());
+  $('edNombre').value = esCopia ? base.nombre + ' (copia)' : base.nombre;
+  setRinde(base.tipoRinde || 'PORCIONES');
+  $('edPorciones').value = base.tipoRinde === 'PORCIONES' ? fmt(base.rinde) : '';
+  const pl = /^(\d+)x(\d+)$/i.exec(base.rindeDetalle || '');
+  $('edFilas').value = base.tipoRinde === 'PLACA' && pl ? pl[1] : ''; $('edCols').value = base.tipoRinde === 'PLACA' && pl ? pl[2] : '';
+  $('edGramos').value = base.tipoRinde === 'PESO' ? fmt(base.rinde) : ''; $('edMasa').value = fmt(base.masaManual);
+  [['edEmpaque', 'empaque'], ['edMano', 'manoObra'], ['edEnergia', 'energia'], ['edOtros', 'otros'], ['edMerma', 'mermaPct'], ['edPrecioCom', 'precioComercio'], ['edPrecioPub', 'precioPublico'], ['edNotas', 'notas']]
+    .forEach(([id, k]) => { const v = base[k]; $(id).value = v === null || v === undefined || (v === 0 && k !== 'mermaPct') ? '' : (k === 'notas' ? v : fmt(v)); });
+  $('btnArchivar').style.display = ED.id ? '' : 'none'; $('btnDuplicar').style.display = ED.id ? '' : 'none';
+  $('vistaLista').classList.add('oculto'); $('vistaEditor').classList.remove('oculto'); document.body.classList.add('editando');
+  pintarRenglones(); placaTotal();
+  if (ED.calculo && !esCopia) pintarResultado(ED.calculo); else $('edResultado').innerHTML = '<p class="ayuda">Cargá ingredientes y el rinde: el costo aparece acá solo.</p>';
+  msg('edMsg', esCopia ? '📄 Es una copia sin guardar: cambiá lo distinto (por ejemplo el nombre y la manteca) y tocá Guardar.' : '', 'info');
+  window.scrollTo({ top: 0 });
+  if (!ED.id) $('edNombre').focus();
+  if (esCopia) previaPronto();
+}
+function renglonVacio() { return { insumoId: '', cantidad: '', unidad: 'g', factor: 1, detalle: '', texto: '' }; }
+async function volverLista() {
+  if (ED && ED.dirty && !(await confirmar('Cambios sin guardar', 'Tenés cambios en «' + VAO.esc($('edNombre').value || 'la receta') + '» que no guardaste. Si volvés, se pierden.', 'Volver sin guardar', true))) return;
+  ED = null; $('vistaEditor').classList.add('oculto'); $('vistaLista').classList.remove('oculto'); document.body.classList.remove('editando'); VAO.msg('edMsg', '');
+}
+function marcarCambio() { if (!ED) return; ED.dirty = true; if (!ED.incierto) ED.opId = VAO.opId('REC'); previaPronto(); }
+
+function pintarRenglones() {
+  const box = $('renglones');
+  box.innerHTML = ED.items.map(htmlRenglon).join('');
+  box.querySelectorAll('.ren').forEach(row => conectarRenglon(row, +row.dataset.i));
+  if (ED.calculo) pintarCostosRenglones(ED.calculo);
+}
+function htmlRenglon(it, i) {
+    const ins = INS[it.insumoId], permitidas = ins ? UNIDADES_DE[ins.unidad] : TODAS_UNIDADES;
+    return '<div class="ren" data-i="' + i + '">' +
+      '<input class="cant" inputmode="decimal" enterkeyhint="next" placeholder="Cant." aria-label="Cantidad del renglón ' + (i + 1) + '" value="' + VAO.esc(fmt(it.cantidad)) + '">' +
+      '<div class="ingw"><input class="ing" enterkeyhint="next" autocomplete="off" placeholder="Ingrediente" aria-label="Ingrediente del renglón ' + (i + 1) + '" value="' + VAO.esc(it.texto + (it.detalle ? ' (' + it.detalle + ')' : '')) + '"><div class="sug oculto" role="listbox"></div></div>' +
+      '<span class="rcosto"></span>' +
+      '<button class="vao-btn chico peligro quitar vao-escribe" aria-label="Quitar renglón ' + (i + 1) + '" tabindex="-1">✕</button>' +
+      '<div class="unis">' + permitidas.map(u => '<button type="button" class="uni' + (u === it.unidad ? ' activo' : '') + '" data-u="' + u + '" tabindex="-1">' + u + '</button>').join('') +
+      (ins && ins.unidad === 'u' ? '<label class="fac">cuenta como <input inputmode="decimal" value="' + fmt(it.factor || 1) + '" aria-label="Cuenta como cuántas unidades"> ' + VAO.esc(ins.nombre.toLowerCase()) + '</label>' : '') + '</div></div>';
+}
+function conectarRenglon(row, i) {
+  const it = ED.items[i], cant = row.querySelector('.cant'), ing = row.querySelector('.ing'), sug = row.querySelector('.sug');
+  cant.addEventListener('input', () => { it.cantidad = num(cant.value); asegurarRenglonFinal(i); marcarCambio(); });
+  cant.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ing.focus(); ing.select(); } });
+  row.querySelectorAll('.uni').forEach(b => {   // tocar la unidad no saca el teclado: sigue en el ingrediente (o en la cantidad si ya está elegido)
+    b.addEventListener('mousedown', e => e.preventDefault());
+    b.addEventListener('click', () => { it.unidad = b.dataset.u; row.querySelectorAll('.uni').forEach(x => x.classList.toggle('activo', x === b)); marcarCambio(); (it.insumoId ? cant : ing).focus(); });
+  });
+  const fac = row.querySelector('.fac input'); if (fac) fac.addEventListener('input', () => { const f = num(fac.value); it.factor = f > 0 ? f : 1; marcarCambio(); });
+  row.querySelector('.quitar').addEventListener('click', () => { ED.items.splice(i, 1); if (!ED.items.length) ED.items.push(renglonVacio()); pintarRenglones(); marcarCambio(); });
+  let marcado = 0, opciones = [];
+  const cerrarSug = () => { sug.classList.add('oculto'); };
+  const mostrar = () => {
+    const t = ing.value.trim(); if (!t) { cerrarSug(); return; }
+    const q = VAO.sinTildes(t), pal = q.split(/\s+/).filter(Boolean);
+    opciones = E.insumos.filter(x => pal.every(w => VAO.sinTildes(x.nombre).indexOf(w) !== -1)).slice(0, 6).map(x => ({ tipo: 'ins', ins: x }));
+    const huevo = E.insumos.find(x => x.unidad === 'u' && /HUEVO/.test(VAO.sinTildes(x.nombre)));
+    if (huevo && /^(YEMA|CLARA)S?$/.test(q)) opciones.unshift({ tipo: 'ins', ins: huevo, detalle: /^YEMA/.test(q) ? 'yema' : 'clara' });   // reutiliza el huevo que ya tiene precio
+    const exacto = E.insumos.some(x => VAO.sinTildes(x.nombre) === q);
+    if (!exacto && t.length >= 2) opciones.push({ tipo: 'crear', nombre: t.replace(/\s+/g, ' ').slice(0, 60) });
+    marcado = 0;
+    sug.innerHTML = opciones.map((o, k) => o.tipo === 'ins'
+      ? '<button type="button" role="option" data-k="' + k + '"' + (k === 0 ? ' class="marcado"' : '') + '><span>' + VAO.esc(o.ins.nombre) + (o.detalle ? ' · <b>' + o.detalle + '</b> <small>(cuenta como 1 ' + VAO.esc(o.ins.nombre.toLowerCase()) + ')</small>' : '') + '</span><small>' + (o.ins.costo === null ? 'sin precio' : pesos(precioRef(o.ins)) + ' ' + porQue(o.ins.unidad)) + '</small></button>'
+      : '<button type="button" role="option" data-k="' + k + '"' + (k === 0 ? ' class="marcado"' : '') + '><span>＋ Crear «' + VAO.esc(o.nombre) + '»</span><small>se mide en ' + NOMBRE_UNIDAD[BASE_DE[it.unidad] || 'g'] + '</small></button>').join('');
+    sug.classList.toggle('oculto', !opciones.length);
+    sug.querySelectorAll('button').forEach(b => b.addEventListener('mousedown', e => { e.preventDefault(); elegir(+b.dataset.k); }));
+  };
+  const elegir = async k => {
+    const o = opciones[k]; if (!o) return; cerrarSug();
+    if (o.tipo === 'crear') {
+      const base = BASE_DE[it.unidad] || 'g';
+      ing.disabled = true;
+      try {
+        const r = await VAO.api('recGuardarInsumo', { nombre: o.nombre, unidad: base });
+        ing.disabled = false;
+        if (!r.success) { msg('edMsg', r.error, 'error'); ing.focus(); return; }
+        E.insumos.push(r.insumo); E.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')); INS[r.insumo.id] = r.insumo;
+        it.insumoId = r.insumo.id; it.texto = r.insumo.nombre; it.detalle = '';
+        msg('edMsg', r.yaExistia ? r.mensaje : '«' + r.insumo.nombre + '» agregado a tus ingredientes. Todavía no tiene precio: cargalo cuando quieras con el botón «sin precio».', r.yaExistia ? 'info' : 'ok');
+      } catch (e) { ing.disabled = false; msg('edMsg', 'Sin conexión: no se creó el ingrediente. Revisá internet y elegilo de nuevo.', 'error'); return; }
+    } else { it.insumoId = o.ins.id; it.texto = o.ins.nombre; it.detalle = o.detalle || ''; if (o.detalle) it.factor = 1; }
+    const insE = INS[it.insumoId]; if (insE && UNIDADES_DE[insE.unidad].indexOf(it.unidad) === -1) it.unidad = insE.unidad;   // unidad compatible, sin preguntar
+    asegurarRenglonFinal(i); marcarCambio(); pintarRenglones();
+    const sig = document.querySelector('.ren[data-i="' + (i + 1) + '"] .cant'); if (sig) sig.focus();
+  };
+  ing.addEventListener('input', () => { if (it.insumoId && ing.value !== it.texto) { it.insumoId = ''; it.detalle = ''; marcarCambio(); } mostrar(); });
+  ing.addEventListener('focus', () => { if (!it.insumoId) mostrar(); });
+  ing.addEventListener('blur', () => setTimeout(cerrarSug, 150));
+  ing.addEventListener('keydown', e => {
+    const bs = sug.querySelectorAll('button');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { if (!bs.length) return; e.preventDefault(); marcado = (marcado + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length; bs.forEach((b, k) => b.classList.toggle('marcado', k === marcado)); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (!sug.classList.contains('oculto') && opciones.length) elegir(marcado); else { const sig = document.querySelector('.ren[data-i="' + (i + 1) + '"] .cant'); if (sig) sig.focus(); } }
+    else if (e.key === 'Escape') cerrarSug();
+  });
+}
+function asegurarRenglonFinal(i) {   // siempre queda un renglón vacío al final para seguir escribiendo (se agrega sin redibujar: no se pierde el foco)
+  if (i === ED.items.length - 1 && (ED.items[i].insumoId || ED.items[i].cantidad)) {
+    ED.items.push(renglonVacio());
+    const n = ED.items.length - 1; $('renglones').insertAdjacentHTML('beforeend', htmlRenglon(ED.items[n], n));
+    conectarRenglon(document.querySelector('.ren[data-i="' + n + '"]'), n);
+  }
+}
+function setRinde(t) {
+  if (ED) ED.tipoRinde = t;
+  document.querySelectorAll('#segRinde button').forEach(b => { const on = b.dataset.r === t; b.classList.toggle('activo', on); b.setAttribute('aria-checked', on); });
+  ['PORCIONES', 'PLACA', 'PESO'].forEach(k => $('rinde' + k).classList.toggle('oculto', k !== t));
+}
+function placaTotal() { const f = num($('edFilas').value), c = num($('edCols').value); $('edPlacaTotal').textContent = f > 0 && c > 0 ? Math.round(f * c) + ' unidades' : '—'; }
+function recetaDelFormulario() {
+  const t = ED.tipoRinde, f = num($('edFilas').value), c = num($('edCols').value);
+  return { id: ED.id, nombre: $('edNombre').value.trim(), tipoRinde: t,
+    rinde: t === 'PORCIONES' ? num($('edPorciones').value) : t === 'PLACA' ? (f > 0 && c > 0 ? Math.round(f) * Math.round(c) : null) : num($('edGramos').value),
+    rindeDetalle: t === 'PLACA' && f > 0 && c > 0 ? Math.round(f) + 'x' + Math.round(c) : '', masaManual: t === 'PESO' ? num($('edMasa').value) : null,
+    empaque: num($('edEmpaque').value), manoObra: num($('edMano').value), energia: num($('edEnergia').value), otros: num($('edOtros').value), mermaPct: num($('edMerma').value),
+    precioComercio: num($('edPrecioCom').value), precioPublico: num($('edPrecioPub').value), notas: $('edNotas').value,
+    items: ED.items.map(it => ({ insumoId: it.insumoId, cantidad: it.cantidad, unidad: it.unidad, factor: it.factor || 1, detalle: it.detalle })) };
+}
+// Vista previa del costo: la calcula el SERVIDOR (no escribe nada). Se pide un momento después del último cambio.
+function previaPronto() { clearTimeout(PREV_T); PREV_T = setTimeout(previa, 1100); }
+async function previa() {
+  if (!ED) return;
+  const rec = recetaDelFormulario(); if (!rec.items.some(it => it.insumoId && it.cantidad > 0)) return;
+  const seq = ++PREV_SEQ; $('edResultado').style.opacity = .55;
+  try {
+    const r = await VAO.api('recGuardarReceta', { soloCalcular: true, receta: rec });
+    if (seq !== PREV_SEQ || !ED) return;
+    $('edResultado').style.opacity = 1;
+    if (r && r.success) { ED.calculo = r.calculo; pintarResultado(r.calculo, true); }
+  } catch (e) { if (seq === PREV_SEQ) $('edResultado').style.opacity = 1; }
+}
+function pintarCostosRenglones(c) {
+  document.querySelectorAll('.ren').forEach(row => { row.querySelector('.rcosto').innerHTML = ''; row.classList.remove('mal'); });
+  (c.lineas || []).forEach(l => {
+    const row = document.querySelector('.ren[data-i="' + (l.renglon - 1) + '"]'); if (!row) return;
+    const cel = row.querySelector('.rcosto');
+    if (l.sinPrecio) { cel.innerHTML = '<button type="button" class="sinprecio vao-escribe" title="Cargar lo que pagaste por ' + VAO.esc(l.nombre) + '">⚠️ sin precio</button>'; cel.querySelector('button').onclick = () => abrirCompraModal(l.insumoId); }
+    else if (l.aviso) { cel.textContent = '⚠️'; cel.title = l.aviso; row.classList.add('mal'); }
+    else cel.textContent = pesos(l.costo);
+  });
+}
+function pintarResultado(c, esPrevia) {
+  const uni = ED && ED.tipoRinde === 'PORCIONES' ? 'porción' : 'unidad';
+  const mg = (t, m) => m ? '<div><small>' + t + ' · ' + pesos(m.precio) + '</small><b style="color:' + (m.ganancia >= 0 ? 'var(--verde)' : 'var(--rojo)') + '">' + (m.ganancia >= 0 ? 'Ganás ' : 'Perdés ') + pesos(Math.abs(m.ganancia)) + '</b> <small style="display:inline">(' + pct(m.pct) + ')</small></div>' : '';
+  $('edResultado').innerHTML = '<div class="resultado">' +
+    (c.costoUnidad !== null ? '<div><small style="color:var(--suave);font-weight:700;">Te cuesta cada ' + uni + '</small><div class="grande">' + pesos(c.costoUnidad) + (c.incompleto ? ' <span class="vao-chip naranja" style="font-size:.8rem;">incompleto</span>' : '') + '</div></div>' : '') +
+    '<div class="linea"><span>Ingredientes</span><b>' + pesos(c.ingredientes) + '</b></div>' +
+    (c.merma ? '<div class="linea"><span>Merma</span><b>' + pesos(c.merma) + '</b></div>' : '') +
+    (c.adicionales ? '<div class="linea"><span>Empaque, mano de obra y otros</span><b>' + pesos(c.adicionales) + '</b></div>' : '') +
+    '<div class="linea tot"><span>Costo de la tanda</span><b>' + pesos(c.total) + '</b></div>' +
+    (c.unidades ? '<div class="linea"><span>Rinde</span><b>' + c.unidades + ' ' + (c.unidades === 1 ? uni : uni === 'porción' ? 'porciones' : 'unidades') + (c.masa ? ' · masa ' + Math.round(c.masa) + ' g' + (c.sobrante ? ' (sobran ' + Math.round(c.sobrante) + ' g)' : '') : '') + '</b></div>' : '') +
+    ((c.comercio || c.publico) ? '<div class="margen">' + mg('Comercio', c.comercio) + mg('Público', c.publico) + '</div>' : '') +
+    (c.avisos && c.avisos.length ? '<div class="vao-msg aviso" style="margin:8px 0 0;">' + c.avisos.map(VAO.esc).join('<br>') + '</div>' : '') +
+    (esPrevia && ED && ED.dirty ? '<p class="ayuda" style="margin:8px 0 0;">Calculado con lo que escribiste. Todavía no se guardó: tocá 💾 Guardar receta.</p>' : '') + '</div>';
+  pintarCostosRenglones(c);
+}
+async function guardarReceta() {
+  if (!ED) return;
+  const rec = recetaDelFormulario(), b = $('btnGuardar');
+  if (rec.nombre.length < 2) { msg('edMsg', 'Escribí el nombre de la receta (arriba de todo).', 'error'); $('edNombre').focus(); return; }
+  rec.items = rec.items.filter(it => it.insumoId || it.cantidad);
+  if (!rec.items.length) { msg('edMsg', 'Agregá al menos un ingrediente.', 'error'); return; }
+  b.disabled = true; b.textContent = '⏳ Guardando…';
+  try {
+    ED.incierto = true;
+    const r = await VAO.api('recGuardarReceta', { opId: ED.opId, versionEsperada: ED.version, receta: rec });
+    ED.incierto = false;
+    if (!r.success) {
+      msg('edMsg', r.error || 'No se pudo guardar.', 'error');
+      if (r.cambioOtroEquipo) { const m = $('edMsg'); m.insertAdjacentHTML('beforeend', ' <button class="vao-btn chico" id="btnVerNueva">Ver la versión nueva</button>'); $('btnVerNueva').onclick = async () => { ED.dirty = false; await cargar(); const n = E.recetas.find(x => x.id === ED.id); if (n) abrirEditor(n); else volverLista(); }; }
+      (r.renglones || []).forEach(t => { const m = /^Renglón (\d+)/.exec(t); const row = m && document.querySelector('.ren[data-i="' + (m[1] - 1) + '"]'); if (row) row.classList.add('mal'); });
+      ED.opId = VAO.opId('REC');
+    } else {
+      ED.id = r.receta.id; ED.version = r.receta.version; ED.dirty = false; ED.opId = VAO.opId('REC'); ED.calculo = r.receta.calculo;
+      pintarResultado(r.receta.calculo); msg('edMsg', '✅ ' + r.mensaje, 'ok');
+      $('btnArchivar').style.display = ''; $('btnDuplicar').style.display = '';
+      cargar();   // la lista queda al día de fondo (seguís en la receta)
+    }
+  } catch (e) { msg('edMsg', 'Sin conexión: no se sabe si se guardó. Tocá «Guardar» de nuevo: no se duplica.', 'error'); }
+  b.disabled = false; b.textContent = '💾 Guardar receta';
+}
+async function archivarReceta() {
+  if (!ED || !ED.id) return;
+  const nom = $('edNombre').value;
+  if (!(await confirmar('Archivar receta', '«' + VAO.esc(nom) + '» deja de aparecer en tu lista. <b>No se borra</b>: queda guardada en la planilla.', 'Sí, archivar', true))) return;
+  try {
+    const r = await VAO.api('recArchivarReceta', { id: ED.id, version: ED.version, confirmar: true });
+    if (!r.success) { msg('edMsg', r.error, 'error'); return; }
+    aplicarEstado(r.estado); ED = null; $('vistaEditor').classList.add('oculto'); $('vistaLista').classList.remove('oculto'); document.body.classList.remove('editando'); msg('msgLista', '🗄️ ' + r.mensaje, 'ok');
+  } catch (e) { msg('edMsg', VAO.sinConexion, 'error'); }
+}
+
+// ── 🛒 compra (la misma pantalla sirve en la pestaña y en una ventana desde la receta) ──
+function formularioCompra(cont, opciones) {
+  opciones = opciones || {};
+  const st = { insumoId: opciones.insumoId || '', pres: null, opId: VAO.opId('CMP'), incierto: false, firma: '' };
+  const html = '<div class="vao-campo vao-buscar"><label>Ingrediente</label><input class="c-ing" autocomplete="off" placeholder="Escribí parte del nombre"><div class="vao-resultados oculto c-res"></div></div>' +
+    '<div class="c-cuerpo oculto"><label class="ayuda" style="display:block;margin:0 0 4px;font-weight:700;">¿Qué compraste?</label><div class="tarjetas c-tarj"></div>' +
+    '<div class="vao-fila c-otra oculto"><div class="vao-campo" style="flex:0 1 150px;"><label>¿Cuánto trae?</label><input class="c-ocant" inputmode="decimal" placeholder="Ej.: 350"></div><div class="vao-campo" style="flex:0 1 120px;"><label>Unidad</label><select class="c-ouni"></select></div></div>' +
+    '<div class="vao-campo" style="max-width:260px;"><label>¿Cuánto pagaste en total? ($)</label><input class="c-precio" inputmode="decimal" placeholder="Como dice el ticket"></div>' +
+    '<div class="pista c-pista"></div>' +
+    '<label class="chk"><input type="checkbox" class="c-oferta"><span><b>Fue una oferta:</b> no cambiar el costo de mis recetas (la compra queda anotada igual).</span></label>' +
+    '<div class="oculto" data-cmsg></div><div class="vao-fila vao-escribe"><button class="vao-btn primario c-guardar">💾 Guardar compra</button></div></div>';
+  cont.innerHTML = html;
+  const q = s => cont.querySelector(s);
+  const pintarInsumo = () => {
+    const ins = INS[st.insumoId];
+    q('.c-cuerpo').classList.toggle('oculto', !ins);
+    if (!ins) return;
+    q('.c-ing').value = ins.nombre;
+    const lista = ins.presentaciones.slice().sort((a, b) => (b.n === ins.ultima) - (a.n === ins.ultima));
+    st.pres = lista.find(p => p.n === ins.ultima) || null;
+    const cuanto = p => ins.unidad === 'u' ? p.c + ' u' : p.c >= 1000 ? fmt(p.c / 1000) + (ins.unidad === 'g' ? ' kg' : ' l') : p.c + ' ' + ins.unidad;
+    const igual = p => VAO.sinTildes(p.n).replace(/\s/g, '') === VAO.sinTildes(cuanto(p)).replace(/\s/g, '');
+    q('.c-tarj').innerHTML = lista.map((p, k) => { const sub = [igual(p) ? '' : cuanto(p), p.n === ins.ultima ? 'la última' : ''].filter(Boolean).join(' · ');
+      return '<button type="button" data-k="' + k + '"' + (st.pres && st.pres.n === p.n ? ' class="activo"' : '') + '>' + VAO.esc(p.n) + (sub ? '<small>' + sub + '</small>' : '') + '</button>'; }).join('') +
+      '<button type="button" data-otra>Otra<small>escribila</small></button>';
+    q('.c-ouni').innerHTML = (ins.unidad === 'g' ? ['g', 'kg'] : ins.unidad === 'ml' ? ['ml', 'l'] : ['u']).map(u => '<option>' + u + '</option>').join('');
+    q('.c-otra').classList.add('oculto');
+    q('.c-tarj').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      q('.c-tarj').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x === b));
+      if (b.hasAttribute('data-otra')) { st.pres = { n: '', c: null, otra: true }; q('.c-otra').classList.remove('oculto'); q('.c-ocant').focus(); }
+      else { st.pres = lista[+b.dataset.k]; q('.c-otra').classList.add('oculto'); q('.c-precio').focus(); }
+      cambio();
+    }));
+    pista();
+  };
+  const presentacion = () => {
+    if (!st.pres) return null;
+    if (!st.pres.otra) return st.pres;
+    const ins = INS[st.insumoId], v = num(q('.c-ocant').value), u = q('.c-ouni').value; if (!(v > 0)) return null;
+    const c = u === 'kg' || u === 'l' ? v * 1000 : v;
+    return { n: String(v).replace('.', ',') + ' ' + u, c };
+  };
+  const pista = () => {   // la cuenta exacta la hace el servidor al guardar; esto es solo una ayuda mientras escribís
+    const ins = INS[st.insumoId], p = presentacion(), precio = num(q('.c-precio').value);
+    q('.c-pista').textContent = ins && p && precio > 0 ? '≈ te sale ' + pesos((precio / p.c) * (ins.unidad === 'u' ? 1 : 1000)) + ' ' + porQue(ins.unidad) : '';
+  };
+  const cambio = () => { if (!st.incierto) { st.opId = VAO.opId('CMP'); st.firma = ''; } VAO.msg(q('[data-cmsg]'), ''); pista(); };
+  // buscador de ingrediente (con «＋ Crear»)
+  const inp = q('.c-ing'), res = q('.c-res');
+  const buscar = () => {
+    const t = inp.value.trim(), qq = VAO.sinTildes(t); if (t.length < 1) { res.classList.add('oculto'); return; }
+    const l = E.insumos.filter(x => qq.split(/\s+/).every(w => VAO.sinTildes(x.nombre).indexOf(w) !== -1)).slice(0, 8);
+    const exacto = E.insumos.some(x => VAO.sinTildes(x.nombre) === qq);
+    res.innerHTML = l.map(x => '<button type="button" data-id="' + x.id + '"><span>' + VAO.esc(x.nombre) + '</span><small>' + (x.costo === null ? 'sin precio' : pesos(precioRef(x)) + ' ' + porQue(x.unidad)) + '</small></button>').join('') +
+      (!exacto && t.length >= 2 ? '<button type="button" data-crear="1"><span>＋ Crear «' + VAO.esc(t) + '»</span><small>elegís cómo se mide</small></button>' : '');
+    res.classList.toggle('oculto', !res.innerHTML);
+    res.querySelectorAll('[data-id]').forEach(b => b.addEventListener('mousedown', e => { e.preventDefault(); st.insumoId = b.dataset.id; res.classList.add('oculto'); cambio(); pintarInsumo(); }));
+    const cr = res.querySelector('[data-crear]'); if (cr) cr.addEventListener('mousedown', e => { e.preventDefault(); res.classList.add('oculto'); abrirIngrediente(null, t, ins => { st.insumoId = ins.id; cambio(); pintarInsumo(); }); });
+  };
+  inp.addEventListener('input', () => { if (st.insumoId && inp.value !== (INS[st.insumoId] || {}).nombre) { st.insumoId = ''; q('.c-cuerpo').classList.add('oculto'); } buscar(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const b = res.querySelector('button'); if (b) b.dispatchEvent(new MouseEvent('mousedown')); } });
+  inp.addEventListener('blur', () => setTimeout(() => res.classList.add('oculto'), 150));
+  q('.c-precio').addEventListener('input', cambio); q('.c-ocant').addEventListener('input', cambio); q('.c-ouni').addEventListener('change', cambio);
+  q('.c-oferta').addEventListener('change', cambio);
+  q('.c-precio').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardar(false); } });
+  const guardar = async confirmarSalto => {
+    const ins = INS[st.insumoId], p = presentacion(), precio = num(q('.c-precio').value), b = q('.c-guardar');
+    if (!ins) { VAO.msg(q('[data-cmsg]'), 'Elegí el ingrediente.', 'error'); inp.focus(); return; }
+    if (!p) { VAO.msg(q('[data-cmsg]'), 'Tocá qué compraste (o «Otra» y escribí cuánto trae).', 'error'); return; }
+    if (!(precio > 0)) { VAO.msg(q('[data-cmsg]'), 'Escribí cuánto pagaste.', 'error'); q('.c-precio').focus(); return; }
+    b.disabled = true; b.textContent = '⏳ Guardando…';
+    try {
+      st.incierto = true;
+      const r = await VAO.api('recRegistrarCompra', { opId: st.opId, insumoId: ins.id, presentacion: { n: p.n, c: p.c }, precio, esOferta: q('.c-oferta').checked, confirmarSalto: !!confirmarSalto, firma: confirmarSalto ? st.firma : '' });
+      st.incierto = false;
+      if (r.requiereConfirmacion) {
+        st.firma = r.firma;
+        const m = q('[data-cmsg]'); m.className = 'vao-msg aviso'; m.innerHTML = '⚠️ ' + VAO.esc(r.aviso) + '<div class="vao-fila" style="margin-top:8px;"><button class="vao-btn primario chico" data-ok>Sí, está bien: guardar</button><button class="vao-btn chico" data-corr>Corregir</button></div>';
+        m.querySelector('[data-ok]').onclick = () => guardar(true); m.querySelector('[data-corr]').onclick = () => { VAO.msg(m, ''); q('.c-tarj').scrollIntoView({ block: 'center' }); };
+        m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (!r.success) { VAO.msg(q('[data-cmsg]'), r.error || 'No se pudo guardar.', 'error'); st.opId = VAO.opId('CMP'); }
+      else {
+        if (r.estado) aplicarEstado(r.estado);
+        if (opciones.alGuardar) { opciones.alGuardar(r); }
+        else { formularioCompra(cont, {}); cont.insertAdjacentHTML('afterbegin', '<div class="vao-msg ok" role="status">✅ ' + VAO.esc(r.mensaje) + ' Si querés, cargá otra compra.</div>'); cont.querySelector('.c-ing').focus(); }
+      }
+    } catch (e) { VAO.msg(q('[data-cmsg]'), 'Sin conexión: no se sabe si se guardó. Tocá «Guardar compra» de nuevo: no se duplica.', 'error'); }
+    b.disabled = false; b.textContent = '💾 Guardar compra';
+  };
+  q('.c-guardar').addEventListener('click', () => guardar(false));
+  if (st.insumoId) pintarInsumo();
+}
+function abrirCompraModal(insumoId) {
+  const ins = INS[insumoId];
+  const m = modal('🛒 Cargar compra' + (ins ? ' · ' + ins.nombre : ''), '<p class="ayuda">Lo que pagaste. Al guardar, la receta se recalcula y seguís donde estabas.</p><div class="c-modal"></div>');
+  formularioCompra(m.q('.c-modal'), { insumoId, alGuardar: r => { m.cerrar(); if (ED) { msg('edMsg', '✅ ' + r.mensaje, 'ok'); pintarRenglones(); previa(); } } });
+  setTimeout(() => { const t = m.q('.c-tarj button.activo') ? m.q('.c-precio') : m.q('.c-tarj button'); if (t) t.focus(); }, 50);
+}
+
+// ── 🥚 ingredientes ──
+function pintarIngredientes() {
+  const l = $('listaIng');
+  if (!E.insumos.length) { l.innerHTML = '<li class="vao-item"><span class="ayuda">Todavía no tenés ingredientes. Se crean solos mientras escribís una receta, o con «＋ Nuevo ingrediente».</span></li>'; return; }
+  l.innerHTML = E.insumos.map(i => '<li class="vao-item" style="cursor:pointer;" data-id="' + i.id + '"><div class="izq"><b>' + VAO.esc(i.nombre) + '</b><small>' +
+    (i.costo === null ? '<span class="vao-chip naranja">sin precio</span>' : pesos(precioRef(i)) + ' ' + porQue(i.unidad) + ' · ' + VAO.esc(fecha(i.fechaCosto))) + (i.usadoEn ? ' · en ' + i.usadoEn + (i.usadoEn === 1 ? ' receta' : ' recetas') : '') + '</small></div>' +
+    '<button class="vao-btn chico vao-escribe" data-compra="' + i.id + '">🛒</button></li>').join('');
+  l.querySelectorAll('li[data-id]').forEach(li => li.addEventListener('click', e => { if (e.target.closest('[data-compra]')) return; abrirIngrediente(INS[li.dataset.id]); }));
+  l.querySelectorAll('[data-compra]').forEach(b => b.addEventListener('click', () => abrirCompraModal(b.dataset.compra)));
+}
+function abrirIngrediente(ins, nombreNuevo, alCrear) {
+  const nuevo = !ins, u0 = ins ? ins.unidad : 'g';
+  const m = modal(nuevo ? '＋ Nuevo ingrediente' : '🥚 ' + ins.nombre,
+    '<div class="vao-campo"><label>Nombre</label><input class="i-nom" maxlength="60" value="' + VAO.esc(nuevo ? (nombreNuevo || '') : ins.nombre) + '"></div>' +
+    '<label class="ayuda" style="display:block;margin:0 0 4px;font-weight:700;">¿Cómo se mide?</label><div class="seg i-uni">' +
+    ['g', 'ml', 'u'].map(u => '<button type="button" data-u="' + u + '"' + (u === u0 ? ' class="activo"' : '') + (ins && ins.usadoEn && u !== u0 ? ' disabled title="Ya está en recetas"' : '') + '>' + { g: '⚖️ Peso (g)', ml: '🥛 Líquido (ml)', u: '🥚 Unidades' }[u] + '</button>').join('') + '</div>' +
+    '<div class="i-peso vao-campo' + (u0 === 'u' ? '' : ' oculto') + '" style="max-width:240px;"><label>¿Cuánto pesa 1 unidad? (g) · opcional</label><input class="i-p" inputmode="decimal" value="' + VAO.esc(ins && ins.peso ? ins.peso : '') + '" placeholder="Ej.: huevo 50"><small class="ayuda">Sirve para calcular el rinde por peso.</small></div>' +
+    '<details class="i-eq' + (u0 === 'u' ? ' oculto' : '') + '"><summary class="ayuda" style="cursor:pointer;">Cucharadas (opcional)</summary><div class="vao-fila" style="margin-top:6px;"><div class="vao-campo" style="flex:0 1 150px;"><label>1 cda =</label><input class="i-cda" inputmode="decimal" value="' + VAO.esc(ins && ins.equivCda ? ins.equivCda : '') + '" placeholder="15"></div><div class="vao-campo" style="flex:0 1 150px;"><label>1 cdta =</label><input class="i-cdta" inputmode="decimal" value="' + VAO.esc(ins && ins.equivCdta ? ins.equivCdta : '') + '" placeholder="5"></div></div><small class="ayuda">Si lo dejás vacío: 1 cda = 15 y 1 cdta = 5 (g o ml).</small></details>' +
+    (ins ? '<p class="ayuda">' + (ins.costo === null ? 'Todavía sin precio.' : 'Último precio: <b>' + pesos(precioRef(ins)) + ' ' + porQue(ins.unidad) + '</b> (' + VAO.esc(fecha(ins.fechaCosto)) + ').') + (ins.usadoEn ? ' Está en ' + ins.usadoEn + (ins.usadoEn === 1 ? ' receta.' : ' recetas.') : '') + '</p>' : '') +
+    '<div class="oculto" data-imsg></div><div class="vao-fila vao-escribe"><button class="vao-btn primario i-guardar">💾 ' + (nuevo ? 'Agregar' : 'Guardar') + '</button>' + (ins ? '<button class="vao-btn i-compra">🛒 Cargar compra</button>' : '') + '</div>');
+  let uni = u0;
+  m.el.querySelectorAll('.i-uni button').forEach(b => b.addEventListener('click', () => { if (b.disabled) return; uni = b.dataset.u; m.el.querySelectorAll('.i-uni button').forEach(x => x.classList.toggle('activo', x === b)); m.q('.i-peso').classList.toggle('oculto', uni !== 'u'); m.q('.i-eq').classList.toggle('oculto', uni === 'u'); }));
+  if (ins) m.q('.i-compra').onclick = () => { m.cerrar(); abrirCompraModal(ins.id); };
+  m.q('.i-guardar').onclick = async () => {
+    const b = m.q('.i-guardar'); b.disabled = true;
+    try {
+      const r = await VAO.api('recGuardarInsumo', { id: ins ? ins.id : '', nombre: m.q('.i-nom').value, unidad: uni, peso: uni === 'u' ? num(m.q('.i-p').value) : null, equivCda: uni !== 'u' ? num(m.q('.i-cda').value) : null, equivCdta: uni !== 'u' ? num(m.q('.i-cdta').value) : null });
+      b.disabled = false;
+      if (!r.success) { VAO.msg(m.q('[data-imsg]'), r.error, 'error'); return; }
+      m.cerrar(); await cargar();
+      if (alCrear) alCrear(INS[r.insumo.id] || r.insumo);
+      else msg('msgIng', '✅ ' + r.mensaje, r.yaExistia ? 'info' : 'ok');
+    } catch (e) { b.disabled = false; VAO.msg(m.q('[data-imsg]'), VAO.sinConexion, 'error'); }
+  };
+  m.q('.i-nom').focus();
+}
+
+// ── 💬 opiniones (función de todo VAO; acá arranca en Recetas). No se guarda nada en el celular: si no hay señal, el texto queda en el cuadro. ──
+const CLAVE_RESP = 'vao_opi_resp_' + VAO.prefijo;   // solo la fecha de la última respuesta vista (nunca el texto)
+function abrirOpinar() {
+  let tipo = '', opId = VAO.opId('OPI'), incierto = false;
+  const nomTab = { recetas: ED ? 'Recetas · editando' : 'Recetas', compra: 'Cargar compra', ingredientes: 'Ingredientes' }[TAB] || TAB;
+  const m = modal('💬 Tu opinión', '<p class="ayuda">¿Algo para mejorar, una idea o algo que no anduvo? Víctor lo lee y te responde acá.</p>' +
+    '<div class="tipos"><button type="button" data-t="SUGERENCIA">💡 Sugerencia</button><button type="button" data-t="MEJORA">✨ Mejora</button><button type="button" data-t="PROBLEMA">⚠️ Problema</button></div>' +
+    '<div class="vao-campo"><textarea class="o-txt" rows="4" maxlength="500" placeholder="Contanos qué pasó o qué te gustaría…"></textarea><small class="ayuda o-cont" style="text-align:right;">0 / 500</small></div>' +
+    '<p class="ayuda" style="font-size:.78rem;">Se envía con: esta pantalla (' + VAO.esc(nomTab) + '), la versión y el tipo de celular. Nunca tu PIN.</p>' +
+    '<div class="oculto" data-omsg></div><div class="vao-fila"><button class="vao-btn primario o-env">Enviar</button></div>' +
+    '<h3 style="margin:14px 0 4px;font-size:.95rem;">Mis opiniones</h3><ul class="vao-lista mis-opi o-mias"><li class="ayuda">Cargando…</li></ul>');
+  const txt = m.q('.o-txt');
+  m.el.querySelectorAll('.tipos button').forEach(b => b.addEventListener('click', () => { tipo = b.dataset.t; VAO.msg(m.q('[data-omsg]'), ''); m.el.querySelectorAll('.tipos button').forEach(x => x.classList.toggle('activo', x === b)); if (!incierto) opId = VAO.opId('OPI'); txt.focus(); }));
+  txt.addEventListener('input', () => { if (m.q('[data-omsg]').classList.contains('error')) VAO.msg(m.q('[data-omsg]'), ''); m.q('.o-cont').textContent = txt.value.length + ' / 500'; if (!incierto) opId = VAO.opId('OPI'); });
+  m.q('.o-env').onclick = async () => {
+    if (!tipo) { VAO.msg(m.q('[data-omsg]'), 'Elegí si es una sugerencia, una mejora o un problema.', 'error'); return; }
+    if (txt.value.trim().length < 3) { VAO.msg(m.q('[data-omsg]'), 'Escribí tu opinión.', 'error'); txt.focus(); return; }
+    const b = m.q('.o-env'); b.disabled = true; b.textContent = '⏳ Enviando…';
+    try {
+      incierto = true;
+      const r = await VAO.api('enviarOpinion', { opId, tipo, texto: txt.value, pagina: 'recetas', seccion: nomTab, versionPagina: (window.VAO_PAGINA || {}).version || '', dispositivo: dispositivo() });
+      incierto = false;
+      if (r.success) { txt.value = ''; m.q('.o-cont').textContent = '0 / 500'; tipo = ''; m.el.querySelectorAll('.tipos button').forEach(x => x.classList.remove('activo')); opId = VAO.opId('OPI'); VAO.msg(m.q('[data-omsg]'), '✅ ' + r.mensaje, 'ok'); misOpiniones(m.q('.o-mias')); }
+      else VAO.msg(m.q('[data-omsg]'), r.error || 'No se pudo enviar. Tu texto sigue en el cuadro.', 'error');
+    } catch (e) { VAO.msg(m.q('[data-omsg]'), 'Sin conexión: tu texto sigue en el cuadro. Tocá Enviar cuando vuelva la señal (no se duplica).', 'error'); }
+    b.disabled = false; b.textContent = 'Enviar';
+  };
+  misOpiniones(m.q('.o-mias'));
+}
+async function misOpiniones(ul) {
+  try {
+    const r = await VAO.api('misOpiniones', {});
+    if (!r.success) { if (ul) ul.innerHTML = '<li class="ayuda">' + VAO.esc(r.error) + '</li>'; return null; }
+    if (ul) {
+      ul.innerHTML = r.opiniones.length ? r.opiniones.map(o => '<li><b>' + ({ SUGERENCIA: '💡', MEJORA: '✨', PROBLEMA: '⚠️' }[o.tipo] || '') + ' ' + VAO.esc(o.texto.length > 120 ? o.texto.slice(0, 120) + '…' : o.texto) + '</b><br><small class="ayuda">' + VAO.esc(fecha(o.fecha)) + ' · ' + VAO.esc(o.estadoTexto) + '</small>' +
+        (o.respuesta ? '<div class="respuesta">💬 <b>Víctor:</b> ' + VAO.esc(o.respuesta) + '</div>' : '') + '</li>').join('') : '<li class="ayuda">Todavía no enviaste opiniones.</li>';
+      const ult = r.opiniones.reduce((m, o) => o.fechaRespuesta > m ? o.fechaRespuesta : m, '');
+      try { if (ult) localStorage.setItem(CLAVE_RESP, ult); } catch (e) {}
+      $('avisoRespuesta').classList.add('oculto');
+    }
+    return r;
+  } catch (e) { if (ul) ul.innerHTML = '<li class="ayuda">' + VAO.esc(VAO.sinConexion) + '</li>'; return null; }
+}
+async function avisoRespuestas() {
+  const r = await misOpiniones(null); if (!r || !r.opiniones) return;
+  let vista = ''; try { vista = localStorage.getItem(CLAVE_RESP) || ''; } catch (e) {}
+  const nuevas = r.opiniones.filter(o => o.fechaRespuesta && o.fechaRespuesta > vista);
+  if (!nuevas.length) return;
+  const a = $('avisoRespuesta'); a.innerHTML = '<span>💬 Víctor respondió ' + (nuevas.length === 1 ? 'tu opinión' : nuevas.length + ' opiniones') + '.</span><b>Ver</b>'; a.classList.remove('oculto');
+}
+
+// ── inicio ──
+VAO.iniciar({ modulo: 'extra_recetas', titulo: 'Recetas y costos', icono: '🧁', grupo: 'C' }).then(async ok => {
+  if (!ok) { $('btnOpinar').classList.add('oculto'); return; }
+  VAO.pestanas('tabs', t => { TAB = t; if (t === 'compra' && !$('compraTab').innerHTML) formularioCompra($('compraTab'), {}); });
+  $('btnNueva').onclick = () => abrirEditor(null);
+  $('btnVolverLista').onclick = volverLista;
+  $('btnGuardar').onclick = guardarReceta;
+  $('btnArchivar').onclick = archivarReceta;
+  $('btnDuplicar').onclick = () => { const eraDirty = ED.dirty; const copia = Object.assign(recetaDelFormulario(), { id: '', calculo: null }); ED.dirty = false; abrirEditor(copia, true);
+    if (eraDirty) msg('edMsg', '📄 Es una copia con lo que tenías en pantalla. La receta original quedó como estaba guardada. Cambiá el nombre y lo distinto, y tocá Guardar.', 'info'); };
+  $('btnRenglon').onclick = () => { ED.items.push(renglonVacio()); pintarRenglones(); const l = document.querySelectorAll('.ren .cant'); l[l.length - 1].focus(); };
+  document.querySelectorAll('#segRinde button').forEach(b => b.addEventListener('click', () => { setRinde(b.dataset.r); marcarCambio(); }));
+  ['edNombre', 'edPorciones', 'edFilas', 'edCols', 'edGramos', 'edMasa', 'edEmpaque', 'edMano', 'edEnergia', 'edOtros', 'edMerma', 'edPrecioCom', 'edPrecioPub', 'edNotas']
+    .forEach(id => $(id).addEventListener('input', () => { if (id === 'edFilas' || id === 'edCols') placaTotal(); marcarCambio(); }));
+  $('edNombre').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const c = document.querySelector('.ren .cant'); if (c) c.focus(); } });
+  $('btnNuevoIng').onclick = () => abrirIngrediente(null);
+  $('btnOpinar').onclick = abrirOpinar;
+  $('avisoRespuesta').onclick = abrirOpinar;
+  window.addEventListener('beforeunload', e => { if (ED && ED.dirty) { e.preventDefault(); e.returnValue = ''; } });
+  if (await cargar()) avisoRespuestas();
+});
+</script>
+<!-- REGLA DE ORO · aviso de versión: «se actualizó» y «hay una versión nueva» (vao-version.js + versiones.json) -->
+<script>
+window.VAO_PAGINA = { id: 'recetas', nombre: 'Recetas', version: '1', ocupado: function () { return !!(ED && ED.dirty) || !!document.querySelector('.vao-modal'); } };
+</script>
+<script src="vao-version.js"></script>
+</body>
+</html>
